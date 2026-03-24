@@ -910,7 +910,7 @@
       <li><a href="#merchants">Merchants</a></li>
       <li><a href="#agents">Agents</a></li>
       <li><a href="#features">Features</a></li>
-      <li><a href="#" class="nav-cta">Get Started →</a></li>
+      <li><a href="{{route('auth.register')}}" class="nav-cta">Get Started →</a></li>
     </ul>
   </nav>
 
@@ -935,7 +935,7 @@
     </p>
 
     <div class="hero-actions">
-      <a href="#" class="btn-primary">Start Accepting Clerk <span>→</span></a>
+      <a href="{{route('auth.register') }}" class="btn-primary">Start Accepting Clerk <span>→</span></a>
       <a href="#how" class="btn-ghost">See How It Works</a>
     </div>
 

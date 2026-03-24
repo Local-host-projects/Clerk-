@@ -8,6 +8,6 @@ class Projects extends Model
 {
     protected $fillable = ['user_id', 'name', 'description'];
 
-    public function user() { return $this->belongsTo(User::class); }
+    public function merchant() { return $this->belongsTo(MerchantProfile::class); }
     public function products() { return $this->hasMany(Products::class); }
 }

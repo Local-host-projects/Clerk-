@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('merchant')->references('id')->on('merchant_profiles')->onDelete('cascade');
             $table->string('name');
+            $table->text('order_creation_webhook');
+            $table->text('order_completion_webhook');
             $table->text('description')->nullable();
             $table->timestamps();
         });

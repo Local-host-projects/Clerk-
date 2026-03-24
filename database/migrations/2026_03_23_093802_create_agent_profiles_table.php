@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->json('credit_cards')->nullable();
             $table->string('connected_bank_accounts')->nullable();
+            $table->enum('status', ['incomplete', 'complete'])->default('incomplete');
             $table->timestamps();
         });
     }

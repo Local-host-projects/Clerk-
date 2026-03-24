@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('business_address')->nullable();
             $table->string('business_account_number');
             $table->string('bank');
+            $table->enum('status', ['incomplete', 'complete'])->default('incomplete');
             $table->timestamps();
         });
     }
