@@ -161,18 +161,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("d
       <span class="ltxt">All systems <strong>operational</strong> · 41K+ agent points</span>
     </div>
   </aside>
-
+  <form method='post' action='{{route('auth.login.store')}}'>
+  @csrf
   <main class="right">
     <p class="f-eyebrow" id="ey">Sign in</p>
     <h1 class="f-title" id="ft">Welcome back.</h1>
     <p class="f-sub" id="fs">Sign in to your Clerk account to continue.</p>
 
-    <div class="rtabs" id="rtabs">
-      <button class="rtab active" onclick="setRole('customer')" id="rc"><div class="rdot"></div><span class="rlbl">Customer</span></button>
-      <button class="rtab" onclick="setRole('merchant')" id="rm"><div class="rdot"></div><span class="rlbl">Merchant</span></button>
-      <button class="rtab" onclick="setRole('agent')" id="ra"><div class="rdot"></div><span class="rlbl">Agent</span></button>
-    </div>
-
+    @if (session()->has('error'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ session('error') }}
+    </span>
+@endif
     <div class="err-box" id="eb">
       <svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span class="err-txt" id="et">Incorrect credentials. Please try again.</span>
@@ -181,44 +181,33 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("d
     <div class="fields" id="cf">
       <div class="frow" id="emrow">
         <label class="flbl" for="em">Email Address</label>
+        @if ($errors->has('email'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('email') }}
+    </span>
+      @endif
         <div class="fwrap" id="emw">
           <div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-          <input type="email" id="em" placeholder="you@example.com" autocomplete="email" oninput="clErr()" onkeydown="if(event.key==='Enter')doSubmit()"/>
+          <input type="email" name='email' value="{{old('email')}}" id="em" placeholder="you@example.com" autocomplete="email" oninput="clErr()" onkeydown="if(event.key==='Enter')doSubmit()"/>
         </div>
         <span class="ferr" id="eme">Enter a valid email address.</span>
       </div>
-      <div class="frow" id="phrow" style="display:none">
-        <label class="flbl" for="ph">Phone Number</label>
-        <div class="fwrap" id="phw">
-          <div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.18 2 2 0 015 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L9.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
-          <input type="tel" id="ph" placeholder="+234 800 000 0000" autocomplete="tel" oninput="clErr()"/>
-        </div>
-        <span class="ferr" id="phe">Enter a valid Nigerian phone number.</span>
-      </div>
       <div class="frow">
         <label class="flbl" for="pw">Password</label>
+        @if ($errors->has('password'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('password') }}
+    </span>
+      @endif
         <div class="fwrap" id="pww">
           <div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
-          <input type="password" id="pw" placeholder="••••••••••••" autocomplete="current-password" oninput="clErr()" onkeydown="if(event.key==='Enter')doSubmit()"/>
+          <input type="password" name='password' value="{{old('password')}}" id="pw" placeholder="••••••••••••" autocomplete="current-password" oninput="clErr()" onkeydown="if(event.key==='Enter')doSubmit()"/>
           <button class="peye" onclick="tPw()" type="button">
             <svg id="pei" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
         <span class="ferr" id="pwe">Password must be at least 8 characters.</span>
       </div>
-    </div>
-
-    <div class="otpwrap" id="ow">
-      <label class="flbl">Verification Code</label>
-      <div class="otprow">
-        <input class="od" maxlength="1" id="d0" oninput="oi(0)" onkeydown="ok(event,0)"/>
-        <input class="od" maxlength="1" id="d1" oninput="oi(1)" onkeydown="ok(event,1)"/>
-        <input class="od" maxlength="1" id="d2" oninput="oi(2)" onkeydown="ok(event,2)"/>
-        <input class="od" maxlength="1" id="d3" oninput="oi(3)" onkeydown="ok(event,3)"/>
-        <input class="od" maxlength="1" id="d4" oninput="oi(4)" onkeydown="ok(event,4)"/>
-        <input class="od" maxlength="1" id="d5" oninput="oi(5)" onkeydown="ok(event,5)"/>
-      </div>
-      <p class="ohint">Code sent to your registered number. <a onclick="resend()">Resend</a></p>
     </div>
 
     <div class="opts" id="opts">
@@ -229,19 +218,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("d
       <a href="#" class="forgot">Forgot password?</a>
     </div>
 
-    <button class="sbtn" id="sb" onclick="doSubmit()">
+    <button class="sbtn" type='submit'>
       <span id="sl">Sign In</span>
       <span class="arr" id="sa">→</span>
-    </button>
-
-    <div class="or" id="orr"><div class="orl"></div><span class="ort">OR</span><div class="orl"></div></div>
-
-    <button class="fbtn" id="fb" onclick="location.href='clerk_facescan.html'">
-      <div class="fbtnl">
-        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Sign in with face scan
-      </div>
-      <span>→</span>
     </button>
 
     <div class="ffoot">
@@ -249,10 +228,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("d
       <a href="clerk_signup.html" class="flink">Create account →</a>
     </div>
   </main>
+  </form>
 </div>
 @endsection
 @push('scripts')
-    <script>
+<script>
 let role='customer',step='creds',pwVis=false,rem=false;
 function setRole(r){
   role=r;

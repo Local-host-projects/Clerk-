@@ -18,7 +18,11 @@ class AuthController extends Controller
             'email'=>'required|email|exists:users,email',
             'password'=>'required|min:8'
         ]);
-        
+        $auth = Auth::attempt(['email' => $data['email'], 'password' => $data['password']]);
+        if ($auth) {
+            return redirect()->route('merchant.projects') ;
+        }
+        return back()->with('error','Failed to login.');
         
     }
     public function register(Request $request){
@@ -37,11 +41,13 @@ class AuthController extends Controller
         ]);
         if($user){
             Auth::attempt($request->only('email','password'));
-            return back
+            return redirect()->route('merchant.projects');
         }
-        
+        return back()->with('error','Failed to Register your account , try again.');
     }
-
+    public function middleware($role){
+        return view('middleware.index',compact('role'));
+    }
     
     public function registerpage(){
         return view('auth.signup');

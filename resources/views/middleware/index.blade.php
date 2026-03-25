@@ -115,43 +115,79 @@ input:focus { border-color: var(--accent); }
   </div>
 
   <!-- Switcher -->
-  <div class="role-toggle" id="role-toggle" data-active="merchant">
+  <div class="role-toggle" id="role-toggle" data-active="{{$role}}">
     <div class="toggle-slider"></div>
     <button class="role-btn active" id="btn-merchant" onclick="setRole('merchant')">Merchant</button>
     <button class="role-btn" id="btn-agent" onclick="setRole('agent')">Agent</button>
   </div>
 
   <!-- Merchant Form (Maps to merchant_profiles table) -->
-  <form id="form-merchant" class="form-card" method='post'>
+  <form  class="form-card" method='post' action="{{route('merchant.profile.store')}}">
+  @csrf
+  @if (session()->has('error'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ session('error') }}
+    </span>
+@endif
     <div class="input-group">
       <label>Business Name</label>
-      <input type="text" name="business_name" placeholder="Acme Corp" required>
+      @if ($errors->has('business_name'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('business_name') }}
+    </span>
+      @endif
+      <input type="text" name="business_name" value="{{old('business_name')}}" placeholder="Acme Corp" required>
     </div>
     
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div class="input-group">
             <label>Business Phone</label>
-            <input type="tel" name="business_phone" placeholder="+234...">
+            @if ($errors->has('business_phone'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('business_phone') }}
+    </span>
+      @endif
+            <input type="tel" name="business_phone" value="{{old('business_phone')}}" placeholder="+234...">
         </div>
         <div class="input-group">
             <label>Business Email</label>
-            <input type="email" name="business_email" placeholder="hi@acme.com">
+            @if ($errors->has('business_email'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('business_email') }}
+    </span>
+      @endif
+            <input type="email" name="business_email" value="{{old('business_email')}}" placeholder="hi@acme.com">
         </div>
     </div>
 
     <div class="input-group">
         <label>Business Address</label>
-        <input type="text" name="business_address" placeholder="Physical location">
+        @if ($errors->has('business_address'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('business_address') }}
+    </span>
+      @endif
+        <input type="text" name="business_address" value="{{old('business_address')}}" placeholder="Physical location">
     </div>
 
     <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
         <div class="input-group">
             <label>Settlement Account Number</label>
-            <input type="text" name="business_account_number" placeholder="0000000000" required>
+            @if ($errors->has('business_account_number'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('business_account_number') }}
+    </span>
+      @endif
+            <input type="text" name="business_account_number" value="{{old('business_account_name')}}" placeholder="0000000000" required>
         </div>
         <div class="input-group">
             <label>Bank</label>
-            <input type="text" name="bank" placeholder="Access Bank" required>
+            @if ($errors->has('bank'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('bank') }}
+    </span>
+      @endif
+            <input type="text" name="bank" value="{{old('bank')}}" placeholder="Access Bank" required>
         </div>
     </div>
 
@@ -159,25 +195,51 @@ input:focus { border-color: var(--accent); }
   </form>
 
   <!-- Agent Form (Maps to agent_profiles table) -->
-  <form id="form-agent" class="form-card hidden">
+  <form id="form-agent" class="form-card hidden" method="post" action='{{route('agent.profile.store')}}'>
+  @csrf
+  @if (session()->has('error'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ session('error') }}
+    </span>
+@endif
     <div class="input-group">
       <label>Full Legal Name</label>
-      <input type="text" name="full_name" placeholder="John Doe" required>
+      @if ($errors->has('full_name'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('full_name') }}
+    </span>
+      @endif
+      <input type="text" name="full_name" value="{{old('full_name')}}" placeholder="John Doe" required>
     </div>
 
     <div class="input-group">
       <label>Phone Number</label>
-      <input type="tel" name="phone" placeholder="+234..." required>
+      @if ($errors->has('phone'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('phone') }}
+    </span>
+      @endif
+      <input type="tel" name="phone" value="{{old('phone')}}" placeholder="+234..." required>
     </div>
 
     <div class="input-group">
         <label>Residential Address</label>
-        <input type="text" name="address" placeholder="Lagos, Nigeria">
+        @if ($errors->has('address'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('address') }}
+    </span>
+      @endif
+        <input type="text" name="address" value="{{old('address')}}" placeholder="Lagos, Nigeria">
     </div>
 
     <div class="input-group">
         <label>Primary Bank Account</label>
-        <input type="text" name="connected_bank_accounts" placeholder="Bank Name — Account Number">
+        @if ($errors->has('connected_bank_accounts'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('connected_bank_accounts') }}
+    </span>
+      @endif
+        <input type="text" name="connected_bank_accounts" value="{{old('connected_bank_accounts')}}" placeholder="Bank Name — Account Number">
     </div>
 
     <button type="submit" class="btn-submit">Activate Agent Terminal</button>
@@ -195,10 +257,9 @@ input:focus { border-color: var(--accent); }
    * Determine starting view via 'property' (simulated via URL param or local logic)
    */
   window.onload = () => {
-    // Example property: change to 'agent' to show agent form first
-    const preferredRole = new URLSearchParams(window.location.search).get('role') || 'merchant';
-    setRole(preferredRole);
-  };
+  const preferredRole = document.getElementById('role-toggle').dataset.active;
+  setRole(preferredRole);
+};
 
   function setRole(role) {
     const toggle = document.getElementById('role-toggle');
@@ -223,24 +284,24 @@ input:focus { border-color: var(--accent); }
   }
 
   // Handle Form Submissions (prevent reload for demo)
-  document.querySelectorAll('form').forEach(form => {
-    form.onsubmit = (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
+  // document.querySelectorAll('form').forEach(form => {
+  //   form.onsubmit = (e) => {
+  //     e.preventDefault();
+  //     const formData = new FormData(form);
+  //     const data = Object.fromEntries(formData.entries());
       
-      console.log(`Submitting ${form.id} data:`, data);
+  //     console.log(`Submitting ${form.id} data:`, data);
       
-      const btn = form.querySelector('.btn-submit');
-      btn.innerText = "Processing...";
-      btn.style.opacity = "0.5";
+  //     const btn = form.querySelector('.btn-submit');
+  //     btn.innerText = "Processing...";
+  //     btn.style.opacity = "0.5";
       
-      setTimeout(() => {
-        alert(`${data.business_name || data.full_name} registered successfully. Status: COMPLETE.`);
-        // In reality: window.location.href = '/dashboard';
-      }, 1500);
-    };
-  });
+  //     setTimeout(() => {
+  //       alert(`${data.business_name || data.full_name} registered successfully. Status: COMPLETE.`);
+  //       // In reality: window.location.href = '/dashboard';
+  //     }, 1500);
+  //   };
+  // });
 </script>
 
 </body>

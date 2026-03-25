@@ -9,7 +9,7 @@ class MerchantProfile extends Model
      protected $fillable = [
         'user_id', 'business_name', 'business_email',
         'business_phone', 'business_address',
-        'business_account_number', 'bank',
+        'business_account_number', 'bank', 'status'
     ];
 
     public function user() { return $this->belongsTo(User::class); }

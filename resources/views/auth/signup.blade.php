@@ -877,6 +877,11 @@
                         <div class="fg">
                             <div class="frow">
                                 <label class="flbl" for="fn">First Name *</label>
+                                @if ($errors->has('first_name'))
+                                    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+                                        {{ $errors->first('first_name') }}
+                                    </span>
+                                @endif
                                 <div class="fwrap" id="fnw">
                                     <div class="fic">
                                         <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">
@@ -890,6 +895,11 @@
                             </div>
                             <div class="frow">
                                 <label class="flbl" for="ln">Last Name *</label>
+                                @if ($errors->has('last_name'))
+                                    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+                                        {{ $errors->first('last_name') }}
+                                    </span>
+                                @endif
                                 <div class="fwrap" id="lnw">
                                     <div class="fic">
                                         <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">
@@ -905,6 +915,11 @@
     
                         <div class="frow">
                             <label class="flbl" for="ema">Email Address *</label>
+                            @if ($errors->has('email'))
+                                    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+                                        {{ $errors->first('email') }}
+                                    </span>
+                                @endif
                             <div class="fwrap" id="emaw">
                                 <div class="fic">
                                     <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">
@@ -919,6 +934,11 @@
                         </div>
                         <div class="frow">
                             <label class="flbl" for="pw1">Password *</label>
+                            @if ($errors->has('password'))
+                                    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+                                        {{ $errors->first('password') }}
+                                    </span>
+                                @endif
                             <div class="fwrap" id="pw1w">
                                 <div class="fic">
                                     <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">
@@ -949,6 +969,11 @@
     
                         <div class="frow">
                             <label class="flbl" for="pw2">Confirm Password *</label>
+                            @if ($errors->has('confirm_password'))
+                                    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+                                        {{ $errors->first('confirm_password') }}
+                                    </span>
+                                @endif
                             <div class="fwrap" id="pw2w">
                                 <div class="fic">
                                     <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">

@@ -49,4 +49,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function merchant(){
+        return $this->hasMany(MerchantProfile::class);
+    }
+    public function agent(){
+        return $this->hasMany(AgentProfile::class);
+    }
+     public function hasMerchantProfile(){
+        return $this->merchant()->exists();
+    }
+
+    public function hasAgentProfile(){
+        return $this->agent()->exists();
+    }
 }
