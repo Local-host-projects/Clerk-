@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Merchant Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #080808;
+  --bg-off:     #0F0F0F;
+  --bg-card:    #111111;
+  --bg-hover:   #151515;
+  --bg-input:   #0C0C0C;
+  --border:     #1C1C1C;
+  --border-mid: #282828;
+  --border-hi:  #363636;
+  --text:       #EEECEA;
+  --text-sub:   #484844;
+  --accent:     #00E676;
+  --accent-h:   #00FF88;
+  --red:        #FF4B4B;
+  --btn-fg:     #080808;
+  --grain:      0.028;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════ */
+.topbar{
+  height:56px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; background:var(--bg); z-index:50;
+}
+.wordmark{font-weight:800; font-size:16px; letter-spacing:.14em; text-decoration:none; color:var(--text)}
+.wordmark span{color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-shell{ flex:1; display:grid; grid-template-columns:220px 1fr; overflow:hidden; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{ border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg); padding-top: 10px;}
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:12px 20px;
+  cursor:pointer; border-left:2px solid transparent; transition:all .15s;
+  font-size:12px; font-weight:700; color:var(--text-sub); text-decoration: none;
+}
+.nav-item:hover{ background:var(--bg-off); color:var(--text); }
+.nav-item.active{ border-left-color:var(--accent); background:var(--bg-off); color:var(--text); }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main{ padding:40px; overflow-y:auto; display:flex; flex-direction:column; gap:48px; max-width: 800px;}
+.view-header{ display:flex; justify-content:space-between; align-items:flex-end; }
+.view-title{ font-size:28px; font-weight:800; }
+.view-sub{ font-family:'Space Mono', monospace; font-size:10px; color:var(--text-sub); margin-top:4px; text-transform: uppercase;}
+
+/* Settings Sections */
+.settings-section { display: flex; flex-direction: column; gap: 24px; }
+.section-header { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 8px; }
+.section-title { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.full-width { grid-column: span 2; }
+
+.input-group { display: flex; flex-direction: column; gap: 8px; }
+.input-group label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.1em;}
+input {
+  background: var(--bg-input); border: 1px solid var(--border); padding: 14px;
+  color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; outline: none; width: 100%;
+}
+input:focus { border-color: var(--accent); }
+
+/* Danger Zone */
+.danger-zone {
+    border: 1px solid var(--red); padding: 24px; background: rgba(255, 75, 75, 0.03);
+    display: flex; flex-direction: column; gap: 16px;
+}
+.danger-title { color: var(--red); font-weight: 800; font-size: 14px; text-transform: uppercase; }
+.danger-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+
+.btn-primary {
+  background: var(--accent); color: var(--btn-fg); border: none; padding: 14px 24px;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 12px; 
+  text-transform: uppercase; cursor: pointer; transition: background 0.2s;
+}
+.btn-primary:hover { background: var(--accent-h); }
+
+.btn-outline {
+    background: transparent; border: 1px solid var(--border-hi); color: var(--text);
+    padding: 12px 20px; font-family: 'Space Mono', monospace; font-size: 10px;
+    text-transform: uppercase; cursor: pointer; font-weight: 700;
+}
+.btn-outline:hover { border-color: var(--text); }
+
+.btn-danger {
+    background: var(--red); color: white; border: none; padding: 12px 20px;
+    font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase;
+    font-weight: 700; cursor: pointer; width: fit-content;
+}
+
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="merchants.html" class="wordmark">CLR<span>K</span> — CONSOLE</a>
+</header>
+
+<div class="app-shell">
+  <nav class="sidebar">
+    <a href="merchants.html" class="nav-item">Projects</a>
+    <a href="products.html" class="nav-item">Products</a>
+    <a href="profile.html" class="nav-item">Profile</a>
+    <a href="settings.html" class="nav-item active">Settings</a>
+  </nav>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Account Settings</h1>
+        <p class="view-sub">Sensitive information and security</p>
+      </div>
+      <button class="btn-primary" onclick="saveChanges()">Update Settings</button>
+    </div>
+
+    <!-- Personal Identity -->
+    <section class="settings-section">
+        <div class="section-header">
+            <h2 class="section-title">Personal Identity</h2>
+        </div>
+        <div class="form-grid">
+            <div class="input-group">
+                <label>First Name</label>
+                <input type="text" value="Alexander">
+            </div>
+            <div class="input-group">
+                <label>Last Name</label>
+                <input type="text" value="Vanguard">
+            </div>
+        </div>
+    </section>
+
+    <!-- Payout Information -->
+    <section class="settings-section">
+        <div class="section-header">
+            <h2 class="section-title">Payout Destinations</h2>
+        </div>
+        <div class="form-grid">
+            <div class="input-group full-width">
+                <label>Bank Account Name</label>
+                <input type="text" value="ALEXANDER VANGUARD SOLUTIONS">
+            </div>
+            <div class="input-group">
+                <label>Account Number</label>
+                <input type="text" value="0019283746">
+            </div>
+            <div class="input-group">
+                <label>Bank Name</label>
+                <input type="text" value="Access Bank PLC" readonly style="opacity: 0.6; cursor: not-allowed;">
+            </div>
+        </div>
+    </section>
+
+    <!-- Security -->
+    <section class="settings-section">
+        <div class="section-header">
+            <h2 class="section-title">Security & Password</h2>
+        </div>
+        <div class="form-grid">
+            <div class="input-group full-width">
+                <label>Current Password</label>
+                <input type="password" placeholder="••••••••••••">
+            </div>
+            <div class="input-group">
+                <label>New Password</label>
+                <input type="password" placeholder="Enter new password">
+            </div>
+            <div class="input-group">
+                <label>Confirm New Password</label>
+                <input type="password" placeholder="Repeat new password">
+            </div>
+        </div>
+        <button class="btn-outline" style="width: fit-content;">Reset Password</button>
+    </section>
+
+    <!-- Danger Zone -->
+    <section class="danger-zone">
+        <div class="danger-title">Danger Zone</div>
+        <p class="danger-desc">
+            Deleting your account will permanently remove all your projects, products, and historical transaction data. 
+            This action is irreversible and requires administrative approval.
+        </p>
+        <button class="btn-danger" onclick="deleteAccount()">Delete Merchant Account</button>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function saveChanges() {
+    const btn = document.querySelector('.btn-primary');
+    const originalText = btn.innerText;
+    
+    btn.innerText = "AUTHENTICATING...";
+    btn.style.opacity = "0.7";
+    btn.disabled = true;
+
+    // Mock delay for sensitive updates
+    setTimeout(() => {
+        btn.innerText = "SETTINGS UPDATED";
+        btn.style.background = "#EEECEA";
+        btn.style.color = "#080808";
+        btn.style.opacity = "1";
+        
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "var(--accent)";
+            btn.style.color = "var(--btn-fg)";
+            btn.disabled = false;
+        }, 2000);
+    }, 1200);
+  }
+
+  function deleteAccount() {
+    const confirmation = prompt("To confirm deletion, please type 'DELETE' below:");
+    if (confirmation === 'DELETE') {
+        alert("Account deletion request has been submitted to the compliance team.");
+    } else {
+        alert("Deletion cancelled. Input did not match.");
+    }
+  }
+</script>
+
+</body>
+</html>

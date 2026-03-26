@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Agent Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #080808;
+  --bg-off:     #0F0F0F;
+  --bg-card:    #111111;
+  --bg-hover:   #151515;
+  --bg-input:   #0C0C0C;
+  --border:     #1C1C1C;
+  --border-mid: #282828;
+  --border-hi:  #363636;
+  --text:       #EEECEA;
+  --text-sub:   #484844;
+  --text-dim:   #252520;
+  --accent:     #00E676;
+  --accent-d:   #003D1F;
+  --accent-h:   #00FF88;
+  --btn-fg:     #080808;
+  --red:        #FF4040;
+  --red-d:      #280808;
+  --amber:      #F5A200;
+  --amber-d:    #281E00;
+  --blue:       #38BDF8;
+  --blue-d:     #071A24;
+  --grain:      0.028;
+}
+[data-theme="light"] {
+  --bg:         #F2F1ED;
+  --bg-off:     #EAEAE4;
+  --bg-card:    #E6E5E0;
+  --bg-hover:   #DEDDDA;
+  --bg-input:   #F7F6F2;
+  --border:     #D2D0CA;
+  --border-mid: #BCBBB6;
+  --border-hi:  #A0A09A;
+  --text:       #111110;
+  --text-sub:   #888884;
+  --text-dim:   #CCCBC6;
+  --accent:     #007A38;
+  --accent-d:   #D4EDDA;
+  --accent-h:   #009444;
+  --btn-fg:     #FFFFFF;
+  --red:        #CC2020;
+  --red-d:      #FDECEA;
+  --amber:      #B45309;
+  --amber-d:    #FEF3C7;
+  --blue:       #0369A1;
+  --blue-d:     #E0F2FE;
+  --grain:      0.010;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:background .2s,color .2s;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+button,input,select,textarea{font-family:'Syne',sans-serif}
+.mono{font-family:'Space Mono',monospace}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════ */
+.topbar{
+  height:52px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;flex-shrink:0;background:var(--bg);
+  position:relative;z-index:50;transition:background .2s,border-color .2s;
+}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.wordmark{font-weight:800;font-size:16px;letter-spacing:.14em;color:var(--text);text-decoration:none}
+.wordmark span{color:var(--accent)}
+.agent-tag{
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:.1em;color:var(--accent);
+  border:1px solid var(--accent-d);background:var(--accent-d);
+  padding:3px 9px;text-transform:uppercase;
+}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.tb-btn{
+  width:32px;height:32px;border:1px solid var(--border);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-sub);transition:all .15s;
+}
+.tb-btn:hover{border-color:var(--border-mid);color:var(--text);background:var(--bg-off)}
+.tb-btn svg{width:13px;height:13px;stroke:currentColor;fill:none}
+/* Live approval count on bell */
+.tb-btn.has-pending{position:relative}
+.tb-btn.has-pending::after{
+  content:attr(data-count);position:absolute;top:-5px;right:-5px;
+  min-width:16px;height:16px;padding:0 3px;
+  background:var(--red);color:#fff;
+  font-size:8px;font-family:'Space Mono',monospace;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  animation:ping .6s ease-out;
+}
+@keyframes ping{0%{transform:scale(1.6);opacity:.6}100%{transform:scale(1);opacity:1}}
+.agent-avatar{
+  width:32px;height:32px;background:var(--accent-d);border:1px solid var(--accent);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-shell{flex:1;display:grid;grid-template-columns:192px 1fr;overflow:hidden}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow-y:auto;background:var(--bg);
+  transition:background .2s,border-color .2s;
+}
+.sidebar-section{padding:14px 0;border-bottom:1px solid var(--border)}
+.sidebar-section:last-child{border-bottom:none;margin-top:auto}
+.sl{
+  font-family:'Space Mono',monospace;font-size:8px;
+  color:var(--text-dim);letter-spacing:.14em;
+  text-transform:uppercase;padding:0 16px 8px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .15s;font-size:12px;font-weight:700;
+  letter-spacing:.01em;color:var(--text-sub);
+}
+.nav-item:hover{background:var(--bg-off);color:var(--text)}
+.nav-item.active{border-left-color:var(--accent);background:var(--bg-off);color:var(--text)}
+.nav-item svg{width:13px;height:13px;stroke:currentColor;fill:none;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;font-family:'Space Mono',monospace;
+  font-size:8px;padding:2px 6px;letter-spacing:.06em;
+}
+.nav-badge.red{background:var(--red-d);color:var(--red)}
+.nav-badge.green{background:var(--accent-d);color:var(--accent)}
+.nav-badge.dim{background:var(--bg-card);color:var(--text-sub);border:1px solid var(--border)}
+
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.view{display:none;flex:1;flex-direction:column;padding:26px 28px;animation:fade-in .2s both}
+.view.active{display:flex}
+@keyframes fade-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.view-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-shrink:0;gap:12px}
+.view-title{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.view-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);margin-top:4px;letter-spacing:.04em}
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════ */
+.btn-approve{
+  background:var(--accent);color:var(--btn-fg);border:none;
+  padding:10px 18px;font-family:'Syne',sans-serif;font-weight:800;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  transition:background .15s;white-space:nowrap;
+}
+.btn-approve:hover{background:var(--accent-h)}
+.btn-decline{
+  background:transparent;color:var(--red);border:1px solid var(--red-d);
+  background:var(--red-d);
+  padding:10px 18px;font-family:'Space Mono',monospace;
+  font-size:10px;letter-spacing:.08em;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:all .15s;white-space:nowrap;
+}
+.btn-decline:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-ghost{
+  background:transparent;color:var(--text-sub);border:1px solid var(--border);
+  padding:9px 16px;font-family:'Space Mono',monospace;
+  font-size:10px;letter-spacing:.08em;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:all .15s;white-space:nowrap;
+}
+.btn-ghost:hover{border-color:var(--border-mid);color:var(--text)}
+.btn-icon{
+  width:30px;height:30px;border:1px solid var(--border);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-sub);transition:all .15s;
+}
+.btn-icon:hover{border-color:var(--border-mid);color:var(--text);background:var(--bg-off)}
+.btn-icon svg{width:12px;height:12px;stroke:currentColor;fill:none}
+
+.badge{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;padding:3px 8px;font-weight:700;text-transform:uppercase;display:inline-block}
+.badge-green{background:var(--accent-d);color:var(--accent)}
+.badge-red{background:var(--red-d);color:var(--red)}
+.badge-amber{background:var(--amber-d);color:var(--amber)}
+.badge-blue{background:var(--blue-d);color:var(--blue)}
+.badge-dim{background:var(--bg-card);color:var(--text-sub);border:1px solid var(--border)}
+
+/* Stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:22px;flex-shrink:0}
+.stat-card{background:var(--bg);padding:18px 20px;display:flex;flex-direction:column;gap:7px;transition:background .2s;position:relative;overflow:hidden}
+.stat-card:hover{background:var(--bg-off)}
+.stat-eyebrow{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.stat-num{font-size:24px;font-weight:800;letter-spacing:-.025em;line-height:1;color:var(--text)}
+.stat-num .hi{color:var(--accent)}
+.stat-delta{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em}
+.delta-up{color:var(--accent)} .delta-dn{color:var(--red)} .delta-eq{color:var(--text-sub)}
+
+/* Table */
+.tbl-wrap{border:1px solid var(--border);overflow:hidden;flex:1;display:flex;flex-direction:column}
+.tbl-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);flex-shrink:0;gap:10px}
+.tbl-search{display:flex;align-items:center;border:1px solid var(--border);background:var(--bg-input);transition:border-color .15s}
+.tbl-search:focus-within{border-color:var(--border-hi)}
+.tbl-search input{background:transparent;border:none;outline:none;padding:7px 10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);width:190px}
+.tbl-search input::placeholder{color:var(--text-dim)}
+.tbl-search svg{width:12px;height:12px;stroke:var(--text-sub);fill:none;margin-left:10px;flex-shrink:0}
+.ftabs{display:flex;gap:0}
+.ftab{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;padding:6px 12px;border:1px solid var(--border);border-right:none;background:transparent;cursor:pointer;color:var(--text-sub);transition:all .15s;text-transform:uppercase}
+.ftab:last-child{border-right:1px solid var(--border)}
+.ftab:hover{background:var(--bg-hover);color:var(--text)}
+.ftab.active{background:var(--bg-off);color:var(--text);border-color:var(--border-mid)}
+.tbl-scroll{flex:1;overflow-y:auto}
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;z-index:2}
+th{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase;padding:10px 14px;background:var(--bg-off);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+td{font-family:'Space Mono',monospace;font-size:10px;color:var(--text);padding:11px 14px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-hover)}
+.row-actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
+tr:hover .row-actions{opacity:1}
+.empty-row td{text-align:center;color:var(--text-dim);font-family:'Space Mono',monospace;font-size:10px;padding:48px;border-bottom:none}
+
+/* ═══════════════════════════════════════════
+   APPROVAL CARD  — the centrepiece
+═══════════════════════════════════════════ */
+.approval-list{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+.approval-card{
+  background:var(--bg-card);
+  display:grid;grid-template-columns:1fr auto;
+  gap:0;
+  transition:background .2s;
+  animation:slide-in .3s ease-out both;
+  position:relative;
+  overflow:hidden;
+}
+@keyframes slide-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.approval-card:hover{background:var(--bg-hover)}
+/* Urgency left stripe */
+.approval-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--amber);transition:background .2s;
+}
+.approval-card.urgent::before{background:var(--red);animation:stripe-pulse .8s ease-in-out infinite alternate}
+.approval-card.fresh::before{background:var(--accent)}
+@keyframes stripe-pulse{from{opacity:.5}to{opacity:1}}
+
+.approval-body{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.approval-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.approval-customer{display:flex;align-items:center;gap:10px}
+.cust-avatar{
+  width:36px;height:36px;border:1px solid var(--border);
+  background:var(--bg-off);display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--text-sub);
+  flex-shrink:0;
+}
+.cust-name{font-size:13px;font-weight:800;letter-spacing:-.01em}
+.cust-ref{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.06em;margin-top:2px}
+.approval-meta{display:flex;gap:20px;flex-wrap:wrap}
+.ameta-item{display:flex;flex-direction:column;gap:3px}
+.ameta-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.ameta-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--text)}
+.ameta-val.amount{font-size:16px;font-weight:700;color:var(--text)}
+.approval-timer{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border:1px solid var(--amber-d);background:var(--amber-d);
+  font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:.06em;
+  width:fit-content;
+}
+.approval-timer.urgent{border-color:var(--red-d);background:var(--red-d);color:var(--red)}
+.timer-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.approval-actions{
+  display:flex;flex-direction:column;gap:1px;border-left:1px solid var(--border);
+  min-width:140px;
+}
+.action-btn{
+  flex:1;border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:11px;
+  letter-spacing:.08em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 20px;transition:background .15s,color .15s;
+}
+.action-approve{background:var(--accent-d);color:var(--accent)}
+.action-approve:hover{background:var(--accent);color:var(--btn-fg)}
+.action-decline{background:var(--red-d);color:var(--red)}
+.action-decline:hover{background:var(--red);color:#fff}
+.action-btn svg{width:13px;height:13px;stroke:currentColor;fill:none}
+
+/* Approved / Declined overlay */
+.approval-card.resolving{pointer-events:none}
+.approval-card.resolving .approval-actions{opacity:0}
+.resolution-overlay{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.approval-card.resolving .resolution-overlay{opacity:1}
+
+/* ═══════════════════════════════════════════
+   OVERVIEW SPECIFICS
+═══════════════════════════════════════════ */
+.overview-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;flex:1;min-height:0}
+.panel-box{border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-box-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);flex-shrink:0}
+.panel-box-title{font-size:11px;font-weight:800;letter-spacing:.02em}
+.panel-box-body{flex:1;overflow-y:auto}
+
+/* Escrow list */
+.escrow-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.escrow-item:last-child{border-bottom:none}
+.escrow-item:hover{background:var(--bg-hover)}
+.escrow-avatar{width:32px;height:32px;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;color:var(--text-sub);flex-shrink:0}
+.escrow-name{font-size:12px;font-weight:700;letter-spacing:-.01em}
+.escrow-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);margin-top:2px}
+.escrow-balance{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);margin-left:auto}
+.escrow-bar-wrap{height:2px;background:var(--border);margin-top:6px;width:100%}
+.escrow-bar{height:100%;background:var(--accent);transition:width .4s}
+
+/* Activity feed */
+.act-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.act-dot.g{background:var(--accent)} .act-dot.r{background:var(--red)} .act-dot.a{background:var(--amber)} .act-dot.b{background:var(--blue)}
+.act-body{flex:1}
+.act-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text);line-height:1.3}
+.act-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);margin-top:2px}
+.act-amt{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0}
+
+/* Earnings card */
+.earnings-hero{border:1px solid var(--border);padding:24px 28px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)}
+.earn-cell{background:var(--bg);padding:20px 22px;display:flex;flex-direction:column;gap:6px}
+.earn-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.earn-num{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1;color:var(--text)}
+.earn-num .hi{color:var(--accent)}
+.earn-delta{font-family:'Space Mono',monospace;font-size:9px}
+
+/* Customer card */
+.cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.cust-card{background:var(--bg-card);padding:18px;display:flex;flex-direction:column;gap:10px;transition:background .15s;cursor:pointer;position:relative}
+.cust-card:hover{background:var(--bg-hover)}
+.cust-card-avatar{width:44px;height:44px;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--text-sub)}
+.cust-card-name{font-size:13px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.cust-card-ref{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.06em}
+.cust-card-balance{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--accent)}
+.cust-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)}
+.cust-card-orders{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub)}
+.biometric-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);position:absolute;top:14px;right:14px}
+.biometric-dot.pending{background:var(--amber)}
+
+/* Face enroll banner */
+.enroll-banner{background:var(--accent-d);border:1px solid var(--accent);padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.enroll-banner svg{width:16px;height:16px;stroke:var(--accent);fill:none;flex-shrink:0}
+.enroll-banner-text{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);line-height:1.6;flex:1}
+.enroll-banner-text strong{color:var(--text)}
+
+/* Settings toggles */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text);letter-spacing:.04em}
+.setting-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);margin-top:3px}
+.toggle{width:36px;height:20px;background:var(--border-mid);border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;background:var(--bg);border-radius:50%;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(16px)}
+
+/* Notification toast */
+.toast{
+  position:fixed;top:64px;right:16px;z-index:200;
+  background:var(--bg-card);border:1px solid var(--border-mid);
+  width:320px;padding:0;
+  animation:toast-in .3s cubic-bezier(.16,1,.3,1) both;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  overflow:hidden;
+}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.toast.out{animation:toast-out .25s ease-in both}
+@keyframes toast-out{to{opacity:0;transform:translateX(20px)}}
+.toast-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg-off)}
+.toast-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--red);letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.toast-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink .8s ease-in-out infinite}
+.toast-close{width:22px;height:22px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sub)}
+.toast-close svg{width:9px;height:9px;stroke:currentColor;fill:none}
+.toast-body{padding:14px}
+.toast-name{font-size:14px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
+.toast-detail{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.6;margin-bottom:14px}
+.toast-amount{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--text);margin-bottom:14px}
+.toast-actions{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.toast-approve{background:var(--accent-d);color:var(--accent);border:none;padding:12px;font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:.1em;cursor:pointer;transition:background .15s}
+.toast-approve:hover{background:var(--accent);color:var(--btn-fg)}
+.toast-decline{background:var(--red-d);color:var(--red);border:none;padding:12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:background .15s}
+.toast-decline:hover{background:var(--red);color:#fff}
+/* Progress bar at bottom of toast */
+.toast-progress{height:2px;background:var(--border)}
+.toast-progress-fill{height:100%;background:var(--red);width:100%;animation:drain 12s linear forwards}
+@keyframes drain{to{width:0%}}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-mid)}
+
+@media(max-width:860px){
+  .app-shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .overview-grid{grid-template-columns:1fr}
+  .cust-grid{grid-template-columns:1fr 1fr}
+  .earnings-hero{grid-template-columns:1fr}
+}
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="#" class="wordmark">CLR<span>K</span></a>
+    <span class="agent-tag">Agent</span>
+  </div>
+  <div class="topbar-right">
+    <button class="tb-btn has-pending" data-count="2" id="bell-btn" onclick="navigate('approvals')" title="Pending approvals">
+      <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    </button>
+    <button class="tb-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+    </button>
+    <div class="agent-avatar">EO</div>
+  </div>
+</header>
+
+<!-- APP SHELL -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="nav-item active" onclick="navigate('overview')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" onclick="navigate('approvals')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Approvals
+        <span class="nav-badge red" id="approvals-badge">2</span>
+      </div>
+      <div class="nav-item" onclick="navigate('customers')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Customers
+        <span class="nav-badge dim" id="customers-badge">7</span>
+      </div>
+      <div class="nav-item" onclick="navigate('escrow')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Escrow
+      </div>
+      <div class="nav-item" onclick="navigate('transactions')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Transactions
+      </div>
+      <div class="nav-item" onclick="navigate('earnings')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
+        Earnings
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sl">Settings</div>
+      <div class="nav-item" onclick="navigate('settings')">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="nav-item" style="color:var(--text-dim)">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="view active" id="view-overview">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Good afternoon, Emeka.</div>
+          <div class="view-sub">YABA · LAGOS · <span id="live-clock"></span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-ghost" onclick="navigate('customers')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Enroll Customer
+          </button>
+          <button class="btn-approve" onclick="navigate('approvals')">
+            View Pending
+            <span id="pending-count-btn" style="background:rgba(0,0,0,.2);padding:2px 7px;font-size:9px">2</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-eyebrow">Held in Escrow</span>
+          <span class="stat-num"><span class="hi">₦</span>142K</span>
+          <span class="stat-delta delta-up">↑ ₦18,000 this week</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-eyebrow">Earnings (Month)</span>
+          <span class="stat-num"><span class="hi">₦</span>4,280</span>
+          <span class="stat-delta delta-up">↑ 12% vs last month</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-eyebrow">Pending Approvals</span>
+          <span class="stat-num" style="color:var(--red)" id="stat-pending">2</span>
+          <span class="stat-delta" style="color:var(--red)">Requires action now</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-eyebrow">Customers Enrolled</span>
+          <span class="stat-num">7</span>
+          <span class="stat-delta delta-eq">→ 1 pending biometric</span>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <!-- Pending approvals (compact) -->
+        <div class="panel-box">
+          <div class="panel-box-hdr">
+            <span class="panel-box-title">Pending Approvals</span>
+            <button class="btn-ghost" onclick="navigate('approvals')" style="padding:5px 10px;font-size:9px">View All →</button>
+          </div>
+          <div class="panel-box-body" id="overview-approvals"></div>
+
+          <!-- Activity feed -->
+          <div style="border-top:1px solid var(--border)">
+            <div class="panel-box-hdr" style="border-bottom:none"><span class="panel-box-title">Recent Activity</span></div>
+            <div id="activity-feed"></div>
+          </div>
+        </div>
+
+        <!-- Right col -->
+        <div style="display:flex;flex-direction:column;gap:12px;overflow:hidden">
+          <!-- Escrow summary -->
+          <div class="panel-box">
+            <div class="panel-box-hdr">
+              <span class="panel-box-title">Top Escrow Balances</span>
+              <button class="btn-ghost" onclick="navigate('escrow')" style="padding:5px 10px;font-size:9px">All →</button>
+            </div>
+            <div class="panel-box-body" id="escrow-mini"></div>
+          </div>
+          <!-- Earnings mini -->
+          <div class="panel-box">
+            <div class="panel-box-hdr"><span class="panel-box-title">Earnings Today</span></div>
+            <div class="panel-box-body" style="padding:16px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:28px;font-weight:800;letter-spacing:-.025em;color:var(--accent)">₦480</div>
+              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.06em">4 custody fees collected</div>
+              <div style="height:1px;background:var(--border);margin:10px 0"></div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub)">Week total: <span style="color:var(--text);font-weight:700">₦2,160</span></div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub)">Month total: <span style="color:var(--text);font-weight:700">₦4,280</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ APPROVALS ═══ -->
+    <div class="view" id="view-approvals">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Approvals</div>
+          <div class="view-sub" id="approvals-sub">2 PENDING · REQUIRES YOUR ACTION</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.08em">Auto-decline after 5 min</span>
+        </div>
+      </div>
+
+      <!-- Pending section -->
+      <div style="margin-bottom:20px">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:14px;height:1px;background:var(--accent)"></span>
+          PENDING ACTION
+        </div>
+        <div class="approval-list" id="pending-approvals"></div>
+        <div id="no-pending" style="display:none;border:1px solid var(--border);padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim)">
+          No pending approvals
+        </div>
+      </div>
+
+      <!-- Resolved today -->
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:14px;height:1px;background:var(--border-mid)"></span>
+          RESOLVED TODAY
+        </div>
+        <div class="tbl-wrap" style="flex:none">
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr><th>Customer</th><th>Merchant</th><th>Amount</th><th>Status</th><th>Time</th></tr></thead>
+              <tbody id="resolved-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CUSTOMERS ═══ -->
+    <div class="view" id="view-customers">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Customers</div>
+          <div class="view-sub">7 ENROLLED · 1 PENDING BIOMETRIC</div>
+        </div>
+        <button class="btn-approve" onclick="showEnrollModal()">
+          + Enroll Customer
+        </button>
+      </div>
+
+      <div class="enroll-banner">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <div class="enroll-banner-text">
+          <strong>Blessing Okafor</strong> enrolled but has not completed face registration. Ask them to visit the Clerk checkout page to complete biometric setup.
+        </div>
+        <button class="btn-ghost" style="flex-shrink:0;font-size:9px;padding:6px 12px">Remind</button>
+      </div>
+
+      <div class="cust-grid" id="customer-grid"></div>
+    </div>
+
+    <!-- ═══ ESCROW ═══ -->
+    <div class="view" id="view-escrow">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Escrow</div>
+          <div class="view-sub">₦142,500 TOTAL HELD · 7 ACCOUNTS</div>
+        </div>
+        <button class="btn-ghost">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-bar">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em">CUSTOMER ESCROW ACCOUNTS</span>
+          <div class="tbl-search">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search customer..."/>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Customer</th><th>Ref</th><th>Balance</th><th>Locked</th><th>Available</th><th>Last Activity</th><th>Status</th><th></th></tr></thead>
+            <tbody id="escrow-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TRANSACTIONS ═══ -->
+    <div class="view" id="view-transactions">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Transactions</div>
+          <div class="view-sub">ALL APPROVED / DECLINED PAYMENTS</div>
+        </div>
+        <button class="btn-ghost">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-bar">
+          <div class="ftabs" id="tx-ftabs">
+            <button class="ftab active" onclick="filterTx('all')">All</button>
+            <button class="ftab" onclick="filterTx('approved')">Approved</button>
+            <button class="ftab" onclick="filterTx('declined')">Declined</button>
+          </div>
+          <div class="tbl-search">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search order or customer..." oninput="filterTxSearch(this.value)"/>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Merchant</th><th>Amount</th><th>Outcome</th><th>Time</th></tr></thead>
+            <tbody id="tx-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EARNINGS ═══ -->
+    <div class="view" id="view-earnings">
+      <div class="view-header">
+        <div>
+          <div class="view-title">Earnings</div>
+          <div class="view-sub">CUSTODY FEES · DECEMBER 2024</div>
+        </div>
+      </div>
+      <div class="earnings-hero">
+        <div class="earn-cell">
+          <span class="earn-label">This Month</span>
+          <span class="earn-num"><span class="hi">₦</span>4,280</span>
+          <span class="earn-delta delta-up">↑ 12% vs Nov</span>
+        </div>
+        <div class="earn-cell">
+          <span class="earn-label">All Time</span>
+          <span class="earn-num"><span class="hi">₦</span>38,940</span>
+          <span class="earn-delta delta-eq">→ Since Jan 2024</span>
+        </div>
+        <div class="earn-cell">
+          <span class="earn-label">Avg per Customer</span>
+          <span class="earn-num">₦<span class="hi">611</span></span>
+          <span class="earn-delta delta-up">↑ ₦42 this month</span>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-bar"><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em">FEE BREAKDOWN BY CUSTOMER</span></div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Customer</th><th>Avg Balance</th><th>Fee Rate</th><th>Fees Collected</th><th>Transactions</th><th>Trend</th></tr></thead>
+            <tbody id="earnings-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="view" id="view-settings">
+      <div class="view-header">
+        <div><div class="view-title">Settings</div><div class="view-sub">ACCOUNT · NOTIFICATIONS · SECURITY</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="border:1px solid var(--border)">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);font-size:11px;font-weight:800">Account</div>
+          <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase">Agent Name</span>
+              <div style="border:1px solid var(--border);background:var(--bg-input)"><input type="text" value="Emeka Obi" style="background:transparent;border:none;outline:none;width:100%;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text)"/></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase">Phone</span>
+              <div style="border:1px solid var(--border);background:var(--bg-input)"><input type="tel" value="+234 803 441 2291" style="background:transparent;border:none;outline:none;width:100%;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text)"/></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase">Location</span>
+              <div style="border:1px solid var(--border);background:var(--bg-input)"><input type="text" value="Yaba, Lagos" style="background:transparent;border:none;outline:none;width:100%;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text)"/></div>
+            </div>
+            <button class="btn-approve" style="width:100%;justify-content:center">Save Changes</button>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border)">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);font-size:11px;font-weight:800">Notifications</div>
+          <div style="padding:18px">
+            <div class="setting-row">
+              <div><div class="setting-label">Payment requests</div><div class="setting-sub">Push alert when a customer requests approval</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Auto-decline reminder</div><div class="setting-sub">Alert 60 seconds before a request auto-declines</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Low balance alert</div><div class="setting-sub">When a customer's escrow drops below ₦5,000</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Weekly earnings summary</div><div class="setting-sub">SMS recap every Monday morning</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border)">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);font-size:11px;font-weight:800">Security</div>
+          <div style="padding:18px">
+            <div class="setting-row">
+              <div><div class="setting-label">Require PIN for approvals</div><div class="setting-sub">4-digit PIN required before each approval</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Daily approval limit</div><div class="setting-sub">Alert if total approvals exceed ₦100,000 in one day</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border)">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-off);font-size:11px;font-weight:800">Payout Account</div>
+          <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.7">Your custody fees are paid out weekly to your registered bank account. Next payout: <strong style="color:var(--text)">Friday 20 Dec</strong></div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase">Bank Account</span>
+              <div style="border:1px solid var(--border);background:var(--bg-input);display:flex;align-items:center">
+                <span style="padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text)">GTBank — ••••2291</span>
+                <button class="btn-ghost" style="margin-left:auto;border:none;border-left:1px solid var(--border);height:100%">Change</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast" style="display:none">
+  <div class="toast-header">
+    <span class="toast-tag">Payment Request</span>
+    <button class="toast-close" onclick="dismissToast()"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="toast-body">
+    <div class="toast-name" id="toast-name">Funke Adeyemi</div>
+    <div class="toast-detail" id="toast-detail">Arua Studio · CLK-2024-00849</div>
+    <div class="toast-amount" id="toast-amount">₦24,500</div>
+    <div class="toast-actions">
+      <button class="toast-approve" onclick="toastApprove()">APPROVE ✓</button>
+      <button class="toast-decline" onclick="toastDecline()">Decline</button>
+    </div>
+  </div>
+  <div class="toast-progress"><div class="toast-progress-fill" id="toast-progress"></div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const CUSTOMERS = [
+  { id:'c1', name:'Funke Adeyemi',   initials:'FA', ref:'USR-4821', balance:42000, locked:24500, orders:12, enrolled:true  },
+  { id:'c2', name:'Tunde Bello',     initials:'TB', ref:'USR-7741', balance:18500, locked:0,     orders:7,  enrolled:true  },
+  { id:'c3', name:'Ngozi Adamu',     initials:'NA', ref:'USR-1183', balance:31000, locked:0,     orders:9,  enrolled:true  },
+  { id:'c4', name:'Chidi Okeke',     initials:'CO', ref:'USR-6690', balance:8200,  locked:8200,  orders:4,  enrolled:true  },
+  { id:'c5', name:'Amina Yusuf',     initials:'AY', ref:'USR-3304', balance:55000, locked:0,     orders:18, enrolled:true  },
+  { id:'c6', name:'Seun Martins',    initials:'SM', ref:'USR-9012', balance:12600, locked:0,     orders:3,  enrolled:true  },
+  { id:'c7', name:'Blessing Okafor', initials:'BO', ref:'USR-2250', balance:5000,  locked:0,     orders:0,  enrolled:false },
+];
+
+let PENDING = [
+  { id:'req-1', customer:'Funke Adeyemi', initials:'FA', ref:'USR-4821', merchant:'Arua Studio', orderId:'CLK-2024-00847', amount:24500, received:'2 min ago', expiresIn:180, urgent:false },
+  { id:'req-2', customer:'Chidi Okeke',   initials:'CO', ref:'USR-6690', merchant:'Lagos Reads', orderId:'CLK-2024-00848', amount:8200,  received:'4 min ago', expiresIn:60,  urgent:true  },
+];
+
+const RESOLVED = [
+  { customer:'Ngozi Adamu',  merchant:'Arua Studio',  amount:31000, outcome:'approved', time:'10:14 AM' },
+  { customer:'Tunde Bello',  merchant:'Konga Digital', amount:5500,  outcome:'approved', time:'09:30 AM' },
+  { customer:'Amina Yusuf',  merchant:'Arua Studio',  amount:18000, outcome:'declined', time:'08:55 AM' },
+];
+
+const TRANSACTIONS = [
+  { orderId:'CLK-2024-00843', customer:'Ngozi Adamu',  merchant:'Arua Studio',   amount:31000, outcome:'approved', time:'Today 10:14' },
+  { orderId:'CLK-2024-00840', customer:'Tunde Bello',  merchant:'Konga Digital', amount:5500,  outcome:'approved', time:'Today 09:30' },
+  { orderId:'CLK-2024-00838', customer:'Amina Yusuf',  merchant:'Arua Studio',   amount:18000, outcome:'declined', time:'Today 08:55' },
+  { orderId:'CLK-2024-00831', customer:'Seun Martins', merchant:'Lagos Reads',   amount:7200,  outcome:'approved', time:'Yesterday 16:20' },
+  { orderId:'CLK-2024-00820', customer:'Funke Adeyemi',merchant:'Arua Studio',   amount:24500, outcome:'approved', time:'Yesterday 14:05' },
+  { orderId:'CLK-2024-00810', customer:'Chidi Okeke',  merchant:'TechHub Store', amount:12000, outcome:'declined', time:'Dec 17 11:34' },
+];
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function navigate(id) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  // Match sidebar item
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const txt = n.textContent.trim().toLowerCase();
+    if (txt.startsWith(id.toLowerCase())) n.classList.add('active');
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER PENDING APPROVALS (full cards)
+// ═══════════════════════════════════════════
+function renderPending() {
+  const el  = document.getElementById('pending-approvals');
+  const none = document.getElementById('no-pending');
+  const sub  = document.getElementById('approvals-sub');
+  const badge = document.getElementById('approvals-badge');
+  const statPending = document.getElementById('stat-pending');
+  const pendingCountBtn = document.getElementById('pending-count-btn');
+  const bellBtn = document.getElementById('bell-btn');
+
+  const count = PENDING.length;
+  badge.textContent = count || '0';
+  if(statPending) statPending.textContent = count;
+  if(pendingCountBtn) pendingCountBtn.textContent = count;
+  sub.textContent = count
+    ? `${count} PENDING · REQUIRES YOUR ACTION`
+    : 'ALL CAUGHT UP';
+
+  if (count === 0) {
+    el.innerHTML = '';
+    none.style.display = 'block';
+    bellBtn.removeAttribute('data-count');
+    bellBtn.classList.remove('has-pending');
+    return;
+  }
+  none.style.display = 'none';
+  bellBtn.setAttribute('data-count', count);
+  bellBtn.classList.add('has-pending');
+
+  el.innerHTML = PENDING.map(r => `
+    <div class="approval-card ${r.urgent?'urgent':'fresh'}" id="card-${r.id}">
+      <div class="approval-body">
+        <div class="approval-header">
+          <div class="approval-customer">
+            <div class="cust-avatar">${r.initials}</div>
+            <div>
+              <div class="cust-name">${r.customer}</div>
+              <div class="cust-ref">${r.ref}</div>
+            </div>
+          </div>
+          <div class="approval-timer ${r.urgent?'urgent':''}">
+            <div class="timer-dot"></div>
+            <span id="timer-${r.id}">${formatTime(r.expiresIn)}</span> left
+          </div>
+        </div>
+        <div class="approval-meta">
+          <div class="ameta-item">
+            <span class="ameta-label">Merchant</span>
+            <span class="ameta-val">${r.merchant}</span>
+          </div>
+          <div class="ameta-item">
+            <span class="ameta-label">Order</span>
+            <span class="ameta-val" style="color:var(--accent)">${r.orderId}</span>
+          </div>
+          <div class="ameta-item">
+            <span class="ameta-label">Received</span>
+            <span class="ameta-val">${r.received}</span>
+          </div>
+          <div class="ameta-item">
+            <span class="ameta-label">Amount</span>
+            <span class="ameta-val amount">₦${r.amount.toLocaleString('en-NG')}</span>
+          </div>
+        </div>
+      </div>
+      <div class="approval-actions">
+        <button class="action-btn action-approve" onclick="resolveRequest('${r.id}','approved')">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+          Approve
+        </button>
+        <button class="action-btn action-decline" onclick="resolveRequest('${r.id}','declined')">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Decline
+        </button>
+      </div>
+      <div class="resolution-overlay" id="overlay-${r.id}"></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// RENDER OVERVIEW APPROVALS (compact)
+// ═══════════════════════════════════════════
+function renderOverviewApprovals() {
+  const el = document.getElementById('overview-approvals');
+  if (!PENDING.length) {
+    el.innerHTML = `<div style="padding:32px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim)">No pending approvals</div>`;
+    return;
+  }
+  el.innerHTML = PENDING.map(r => `
+    <div class="act-item" style="cursor:pointer" onclick="navigate('approvals')">
+      <div class="act-dot ${r.urgent?'r':'a'}"></div>
+      <div class="act-body">
+        <div class="act-label">${r.customer} → ${r.merchant}</div>
+        <div class="act-time">${r.orderId} · ${r.received}</div>
+      </div>
+      <div class="act-amt" style="color:${r.urgent?'var(--red)':'var(--amber)'}">₦${r.amount.toLocaleString('en-NG')}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// RESOLVE REQUEST
+// ═══════════════════════════════════════════
+function resolveRequest(id, outcome) {
+  const card    = document.getElementById('card-'+id);
+  const overlay = document.getElementById('overlay-'+id);
+  const req     = PENDING.find(r=>r.id===id);
+  if (!req) return;
+
+  card.classList.add('resolving');
+
+  const isApprove = outcome === 'approved';
+  overlay.style.background = isApprove ? 'var(--accent-d)' : 'var(--red-d)';
+  overlay.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${isApprove?'var(--accent)':'var(--red)'}" stroke-width="2.5" stroke-linecap="round">
+      ${isApprove ? '<polyline points="20,6 9,17 4,12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+    </svg>
+    <span style="font-family:'Space Mono',monospace;font-size:11px;color:${isApprove?'var(--accent)':'var(--red)'};letter-spacing:.1em">
+      ${isApprove ? 'APPROVED' : 'DECLINED'}
+    </span>`;
+
+  // Add to resolved
+  RESOLVED.unshift({ customer:req.customer, merchant:req.merchant, amount:req.amount, outcome, time:'Just now' });
+
+  setTimeout(() => {
+    card.style.height = card.offsetHeight + 'px';
+    card.style.overflow = 'hidden';
+    card.style.transition = 'height .3s ease, opacity .3s ease, margin .3s ease';
+    requestAnimationFrame(() => {
+      card.style.height = '0';
+      card.style.opacity = '0';
+      card.style.marginBottom = '-1px';
+    });
+    setTimeout(() => {
+      PENDING = PENDING.filter(r=>r.id!==id);
+      renderPending();
+      renderOverviewApprovals();
+      renderResolved();
+    }, 300);
+  }, 700);
+}
+
+// ═══════════════════════════════════════════
+// TIMERS
+// ═══════════════════════════════════════════
+function formatTime(s) {
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return m>0 ? `${m}m ${String(sec).padStart(2,'0')}s` : `${sec}s`;
+}
+
+setInterval(() => {
+  PENDING.forEach(r => {
+    r.expiresIn = Math.max(0, r.expiresIn-1);
+    if (r.expiresIn <= 30) r.urgent = true;
+    const el = document.getElementById('timer-'+r.id);
+    if (el) el.textContent = formatTime(r.expiresIn);
+    // Auto-decline at 0
+    if (r.expiresIn === 0) resolveRequest(r.id, 'declined');
+  });
+}, 1000);
+
+// ═══════════════════════════════════════════
+// RESOLVED TABLE
+// ═══════════════════════════════════════════
+function renderResolved() {
+  const tbody = document.getElementById('resolved-table');
+  if (!RESOLVED.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No resolved requests today</td></tr>';
+    return;
+  }
+  tbody.innerHTML = RESOLVED.map(r => `
+    <tr>
+      <td>${r.customer}</td>
+      <td>${r.merchant}</td>
+      <td style="font-weight:700">₦${r.amount.toLocaleString('en-NG')}</td>
+      <td><span class="badge ${r.outcome==='approved'?'badge-green':'badge-red'}">${r.outcome}</span></td>
+      <td style="color:var(--text-sub)">${r.time}</td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// RENDER CUSTOMERS
+// ═══════════════════════════════════════════
+function renderCustomers() {
+  const grid = document.getElementById('customer-grid');
+  grid.innerHTML = CUSTOMERS.map(c => `
+    <div class="cust-card">
+      ${c.enrolled ? '<div class="biometric-dot"></div>' : '<div class="biometric-dot pending"></div>'}
+      <div class="cust-card-avatar">${c.initials}</div>
+      <div>
+        <div class="cust-card-name">${c.name}</div>
+        <div class="cust-card-ref">${c.ref}</div>
+      </div>
+      <div class="cust-card-balance">₦${c.balance.toLocaleString('en-NG')}</div>
+      <div class="cust-card-footer">
+        <span class="cust-card-orders">${c.orders} orders</span>
+        <span class="badge ${c.enrolled?'badge-green':'badge-amber'}">${c.enrolled?'Active':'Pending'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// RENDER ESCROW TABLE
+// ═══════════════════════════════════════════
+function renderEscrow() {
+  // Overview mini
+  const mini = document.getElementById('escrow-mini');
+  if (mini) {
+    mini.innerHTML = CUSTOMERS.slice(0,5).map(c => {
+      const pct = Math.round((c.locked/Math.max(c.balance,1))*100);
+      return `<div class="escrow-item">
+        <div class="escrow-avatar">${c.initials}</div>
+        <div style="flex:1;min-width:0">
+          <div class="escrow-name">${c.name}</div>
+          <div class="escrow-meta">${c.ref}</div>
+          <div class="escrow-bar-wrap"><div class="escrow-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="escrow-balance">₦${c.balance.toLocaleString('en-NG')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Full table
+  const tbody = document.getElementById('escrow-table');
+  if (tbody) {
+    tbody.innerHTML = CUSTOMERS.map(c => {
+      const avail = c.balance - c.locked;
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:9px;color:var(--text-sub)">${c.initials}</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700">${c.name}</div>
+          </div>
+        </div></td>
+        <td>${c.ref}</td>
+        <td style="font-weight:700">₦${c.balance.toLocaleString('en-NG')}</td>
+        <td style="color:var(--amber)">${c.locked?'₦'+c.locked.toLocaleString('en-NG'):'—'}</td>
+        <td style="color:var(--accent)">₦${avail.toLocaleString('en-NG')}</td>
+        <td style="color:var(--text-sub)">Today</td>
+        <td><span class="badge ${c.enrolled?'badge-green':'badge-amber'}">${c.enrolled?'Active':'Pending'}</span></td>
+        <td><div class="row-actions">
+          <button class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDER TRANSACTIONS
+// ═══════════════════════════════════════════
+let txFilter = 'all', txSearch = '';
+
+function filterTx(f) {
+  txFilter = f;
+  document.querySelectorAll('#tx-ftabs .ftab').forEach(t => {
+    t.classList.toggle('active', t.textContent.toLowerCase() === f || (f==='all'&&t.textContent==='All'));
+  });
+  renderTransactions();
+}
+
+function filterTxSearch(v) { txSearch = v.toLowerCase(); renderTransactions(); }
+
+function renderTransactions() {
+  const tbody = document.getElementById('tx-table');
+  const filtered = TRANSACTIONS.filter(t => {
+    const mf = txFilter==='all' || t.outcome===txFilter;
+    const ms = !txSearch || t.orderId.toLowerCase().includes(txSearch) || t.customer.toLowerCase().includes(txSearch);
+    return mf && ms;
+  });
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No transactions found</td></tr>'; return;
+  }
+  tbody.innerHTML = filtered.map(t => `
+    <tr>
+      <td style="color:var(--accent)">${t.orderId}</td>
+      <td>${t.customer}</td>
+      <td>${t.merchant}</td>
+      <td style="font-weight:700">₦${t.amount.toLocaleString('en-NG')}</td>
+      <td><span class="badge ${t.outcome==='approved'?'badge-green':'badge-red'}">${t.outcome}</span></td>
+      <td style="color:var(--text-sub)">${t.time}</td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// RENDER EARNINGS
+// ═══════════════════════════════════════════
+function renderEarnings() {
+  const tbody = document.getElementById('earnings-table');
+  const rates = [0.005, 0.005, 0.005, 0.005, 0.005, 0.005];
+  tbody.innerHTML = CUSTOMERS.filter(c=>c.enrolled).map((c,i) => {
+    const fee = Math.round(c.balance * rates[i] * 4);
+    const trend = ['↑','↑','→','↑','↑','→'][i];
+    const tc = trend==='↑'?'var(--accent)':'var(--text-sub)';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="width:22px;height:22px;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--text-sub)">${c.initials}</div>
+        ${c.name}
+      </div></td>
+      <td>₦${c.balance.toLocaleString('en-NG')}</td>
+      <td style="color:var(--text-sub)">0.5% / week</td>
+      <td style="color:var(--accent);font-weight:700">₦${fee.toLocaleString('en-NG')}</td>
+      <td>${c.orders}</td>
+      <td style="color:${tc};font-weight:700">${trend}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// ACTIVITY FEED
+// ═══════════════════════════════════════════
+const ACTIVITY = [
+  { dot:'g', label:'Ngozi Adamu — approved ₦31,000', time:'Today 10:14', amt:'₦31,000' },
+  { dot:'g', label:'Tunde Bello — approved ₦5,500',  time:'Today 09:30', amt:'₦5,500'  },
+  { dot:'r', label:'Amina Yusuf — declined ₦18,000', time:'Today 08:55', amt:'₦18,000' },
+  { dot:'b', label:'Seun Martins — escrow top-up',   time:'Yesterday',   amt:'+₦12,600' },
+  { dot:'g', label:'Funke Adeyemi — approved ₦24,500', time:'Yesterday', amt:'₦24,500' },
+];
+
+function renderActivity() {
+  const el = document.getElementById('activity-feed');
+  el.innerHTML = ACTIVITY.map(a => `
+    <div class="act-item">
+      <div class="act-dot ${a.dot}"></div>
+      <div class="act-body">
+        <div class="act-label">${a.label}</div>
+        <div class="act-time">${a.time}</div>
+      </div>
+      <div class="act-amt">${a.amt}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// LIVE CLOCK
+// ═══════════════════════════════════════════
+function updateClock() {
+  const el = document.getElementById('live-clock');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString('en-NG', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════
+// TOAST NOTIFICATION (simulated incoming)
+// ═══════════════════════════════════════════
+let toastTimeout;
+
+function showToast() {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-name').textContent   = 'Funke Adeyemi';
+  document.getElementById('toast-detail').textContent = 'Arua Studio · CLK-2024-00849';
+  document.getElementById('toast-amount').textContent = '₦24,500';
+  // Reset progress bar animation
+  const prog = document.getElementById('toast-progress');
+  prog.style.animation = 'none';
+  prog.offsetHeight; // reflow
+  prog.style.animation = '';
+  t.style.display = 'block';
+  t.classList.remove('out');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(dismissToast, 12000);
+}
+
+function dismissToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('out');
+  setTimeout(() => { t.style.display = 'none'; t.classList.remove('out'); }, 280);
+}
+
+function toastApprove() {
+  dismissToast();
+  if (PENDING.length) resolveRequest(PENDING[0].id, 'approved');
+}
+
+function toastDecline() {
+  dismissToast();
+  if (PENDING.length) resolveRequest(PENDING[0].id, 'declined');
+}
+
+// Fire toast after 3 seconds on load
+setTimeout(showToast, 3000);
+
+// ═══════════════════════════════════════════
+// ENROLL MODAL (placeholder)
+// ═══════════════════════════════════════════
+function showEnrollModal() {
+  alert('In production: opens face enrollment flow for a new customer.');
+}
+
+// ═══════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════
+function toggleTheme() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme==='dark' ? 'light' : 'dark';
+  syncThemeIcon();
+}
+
+function syncThemeIcon() {
+  const dark = document.documentElement.dataset.theme==='dark';
+  document.getElementById('theme-icon').innerHTML = dark
+    ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+    : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderPending();
+renderOverviewApprovals();
+renderResolved();
+renderCustomers();
+renderEscrow();
+renderTransactions();
+renderEarnings();
+renderActivity();
+syncThemeIcon();
+</script>
+</body>
+</html>

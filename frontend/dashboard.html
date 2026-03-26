@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Agent Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   TOKENS (from your design)
+═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #080808;
+  --bg-off:     #0F0F0F;
+  --bg-card:    #111111;
+  --bg-hover:   #151515;
+  --bg-input:   #0C0C0C;
+  --border:     #1C1C1C;
+  --border-mid: #282828;
+  --border-hi:  #363636;
+  --text:       #EEECEA;
+  --text-sub:   #484844;
+  --text-dim:   #252520;
+  --accent:     #00E676;
+  --accent-d:   #003D1F;
+  --accent-h:   #00FF88;
+  --btn-fg:     #080808;
+  --red:        #FF4040;
+  --red-d:      #280808;
+  --grain:      0.028;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+
+/* Grain Overlay */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+
+/* ═══════════════════════════════════════════
+   TOPBAR & MODE SWITCHER
+═══════════════════════════════════════════ */
+.topbar{
+  height:56px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; background:var(--bg); z-index:50;
+}
+.wordmark{font-weight:800; font-size:16px; letter-spacing:.14em; text-decoration:none; color:var(--text)}
+.wordmark span{color:var(--accent)}
+
+.mode-switcher{
+  display:flex; background:var(--bg-off); border:1px solid var(--border); padding:2px;
+}
+.mode-btn{
+  padding:6px 14px; font-family:'Space Mono', monospace; font-size:10px;
+  font-weight:700; border:none; cursor:pointer; transition:all .2s;
+  background:transparent; color:var(--text-sub); text-transform:uppercase;
+}
+.mode-btn.active{ background:var(--accent); color:var(--btn-fg); }
+.mode-btn:not(.active):hover{ color:var(--text); background:var(--bg-hover); }
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-shell{ flex:1; display:grid; grid-template-columns:220px 1fr; overflow:hidden; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{ border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg); }
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:12px 20px;
+  cursor:pointer; border-left:2px solid transparent; transition:all .15s;
+  font-size:12px; font-weight:700; color:var(--text-sub);
+}
+.nav-item:hover{ background:var(--bg-off); color:var(--text); }
+.nav-item.active{ border-left-color:var(--accent); background:var(--bg-off); color:var(--text); }
+.nav-item svg{ width:14px; height:14px; stroke:currentColor; fill:none; }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main{ padding:32px; overflow-y:auto; display:flex; flex-direction:column; gap:24px; }
+.view-header{ display:flex; justify-content:space-between; align-items:flex-end; }
+.view-title{ font-size:24px; font-weight:800; }
+.view-sub{ font-family:'Space Mono', monospace; font-size:10px; color:var(--text-sub); margin-top:4px; }
+
+/* Stats */
+.stat-card{
+  background:var(--bg-card); border:1px solid var(--border); padding:24px;
+  display:flex; flex-direction:column; gap:8px; width:fit-content; min-width:280px;
+}
+.stat-label{ font-family:'Space Mono', monospace; font-size:9px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.1em;}
+.stat-value{ font-size:32px; font-weight:800; color:var(--accent); }
+
+/* Table */
+.tbl-wrap{ border:1px solid var(--border); background:var(--bg-card); }
+table{ width:100%; border-collapse:collapse; text-align:left; }
+th{ 
+  font-family:'Space Mono', monospace; font-size:9px; color:var(--text-sub); 
+  text-transform:uppercase; padding:12px 16px; border-bottom:1px solid var(--border); 
+}
+td{ 
+  font-family:'Space Mono', monospace; font-size:11px; padding:14px 16px; 
+  border-bottom:1px solid var(--border); color:var(--text);
+}
+tr:hover td{ background:var(--bg-hover); }
+
+/* Buttons */
+.btn-primary{
+  background:var(--accent); color:var(--btn-fg); border:none; padding:12px 20px;
+  font-family:'Syne', sans-serif; font-weight:800; font-size:11px; 
+  text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;
+}
+.btn-primary:hover{ background:var(--accent-h); }
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center; z-index:1000;
+}
+.modal-overlay.active{ display:flex; }
+.modal-card{
+  background:var(--bg-card); border:1px solid var(--border-hi); width:360px; padding:32px;
+  display:flex; flex-direction:column; gap:20px;
+}
+.modal-card h2{ font-size:18px; font-weight:800; }
+.input-group{ display:flex; flex-direction:column; gap:8px; }
+.input-group label{ font-family:'Space Mono', monospace; font-size:9px; color:var(--text-sub); text-transform:uppercase; }
+input{
+  background:var(--bg-input); border:1px solid var(--border); padding:12px;
+  color:var(--text); font-family:'Space Mono', monospace; outline:none;
+}
+input:focus{ border-color:var(--accent); }
+.modal-actions{ display:flex; justify-content:flex-end; gap:12px; }
+.btn-cancel{ background:transparent; border:1px solid var(--border); color:var(--text-sub); padding:8px 16px; cursor:pointer; font-family:'Space Mono', monospace; font-size:10px; }
+
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="#" class="wordmark">CLR<span>K</span></a>
+  <div class="mode-switcher">
+    <button class="mode-btn active">Agent</button>
+    <button class="mode-btn" onclick="alert('Switching to Merchant Dashboard...')">Merchant</button>
+  </div>
+</header>
+
+<div class="app-shell">
+  <nav class="sidebar">
+    <div style="padding-top: 20px;">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Deposit Management
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Transaction History
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Home</h1>
+        <p class="view-sub">AGENT OVERVIEW • MARCH 2026</p>
+      </div>
+      <button class="btn-primary" onclick="toggleModal(true)">Create Order</button>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">Total Transactions Paid Out</span>
+      <span class="stat-value">₦ 4,280,500.00</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Status</th>
+            <th>Amount</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>88291044210</td>
+            <td style="color:var(--accent)">SUCCESS</td>
+            <td>₦ 50,000.00</td>
+            <td>14:20:01</td>
+          </tr>
+          <tr>
+            <td>11920394852</td>
+            <td style="color:var(--accent)">SUCCESS</td>
+            <td>₦ 125,000.00</td>
+            <td>12:15:45</td>
+          </tr>
+          <tr>
+            <td>44930211832</td>
+            <td style="color:var(--red)">FAILED</td>
+            <td>₦ 5,000.00</td>
+            <td>09:30:12</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="order-modal">
+  <div class="modal-card">
+    <h2>Create New Order</h2>
+    <div class="input-group">
+      <label for="order-id">Order ID (11 Digits)</label>
+      <input type="text" id="order-id" placeholder="e.g. 12345678901" maxlength="11">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="toggleModal(false)">Cancel</button>
+      <button class="btn-primary" onclick="submitOrder()">Submit Order</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleModal(show) {
+    const modal = document.getElementById('order-modal');
+    modal.classList.toggle('active', show);
+    if (!show) document.getElementById('order-id').value = '';
+  }
+
+  async function submitOrder() {
+    const orderId = document.getElementById('order-id').value;
+    
+    // Validation: Exactly 11 digits
+    if (!/^\d{11}$/.test(orderId)) {
+      alert("Please enter a valid 11-digit Order ID.");
+      return;
+    }
+
+    // Placeholder POST request
+    console.log("Submitting order:", orderId);
+    
+    // Example fetch call:
+    /*
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId })
+    });
+    */
+
+    alert(`Order ${orderId} submitted successfully!`);
+    toggleModal(false);
+  }
+</script>
+
+</body>
+</html>

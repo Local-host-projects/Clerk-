@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Merchant Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #080808;
+  --bg-off:     #0F0F0F;
+  --bg-card:    #111111;
+  --bg-hover:   #151515;
+  --bg-input:   #0C0C0C;
+  --border:     #1C1C1C;
+  --border-mid: #282828;
+  --border-hi:  #363636;
+  --text:       #EEECEA;
+  --text-sub:   #484844;
+  --accent:     #00E676;
+  --accent-h:   #00FF88;
+  --red:        #FF4B4B;
+  --btn-fg:     #080808;
+  --grain:      0.028;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════ */
+.topbar{
+  height:56px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; background:var(--bg); z-index:50;
+}
+.wordmark{font-weight:800; font-size:16px; letter-spacing:.14em; text-decoration:none; color:var(--text)}
+.wordmark span{color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-shell{ flex:1; display:grid; grid-template-columns:220px 1fr; overflow:hidden; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{ border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg); padding-top: 10px;}
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:12px 20px;
+  cursor:pointer; border-left:2px solid transparent; transition:all .15s;
+  font-size:12px; font-weight:700; color:var(--text-sub); text-decoration: none;
+}
+.nav-item:hover{ background:var(--bg-off); color:var(--text); }
+.nav-item.active{ border-left-color:var(--accent); background:var(--bg-off); color:var(--text); }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main{ padding:40px; overflow-y:auto; display:flex; flex-direction:column; gap:40px; max-width: 900px;}
+.view-header{ display:flex; justify-content:space-between; align-items:flex-end; }
+.view-title{ font-size:28px; font-weight:800; }
+.view-sub{ font-family:'Space Mono', monospace; font-size:10px; color:var(--text-sub); margin-top:4px; text-transform: uppercase;}
+
+/* Profile Layout */
+.profile-grid { display: grid; grid-template-columns: 240px 1fr; gap: 48px; }
+
+/* Avatar Section */
+.avatar-section { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+.avatar-frame {
+    width: 200px; height: 200px; border: 1px solid var(--border-mid);
+    background: var(--bg-card); position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; cursor: pointer;
+}
+.avatar-frame:hover .upload-overlay { opacity: 1; }
+.avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
+.upload-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase;
+    opacity: 0; transition: opacity 0.2s;
+}
+
+/* Form Sections */
+.settings-group { display: flex; flex-direction: column; gap: 24px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+.settings-group:last-child { border-bottom: none; }
+.group-header { display: flex; flex-direction: column; gap: 4px; }
+.group-title { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;}
+.group-desc { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-sub); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.full-width { grid-column: span 2; }
+
+.input-group { display: flex; flex-direction: column; gap: 8px; }
+.input-group label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.1em;}
+input, textarea {
+  background: var(--bg-input); border: 1px solid var(--border); padding: 14px;
+  color: var(--text); font-family: 'Space Mono', monospace; font-size: 12px; outline: none; width: 100%;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent); color: var(--btn-fg); border: none; padding: 14px 32px;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 12px; 
+  text-transform: uppercase; cursor: pointer; align-self: flex-start;
+}
+.btn-primary:hover { background: var(--accent-h); }
+
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="merchants.html" class="wordmark">CLR<span>K</span> — CONSOLE</a>
+</header>
+
+<div class="app-shell">
+  <nav class="sidebar">
+    <a href="merchants.html" class="nav-item">Projects</a>
+    <a href="products.html" class="nav-item">Products</a>
+    <a href="profile.html" class="nav-item active">Profile</a>
+    <a href="#" class="nav-item">Settings</a>
+  </nav>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Profile</h1>
+        <p class="view-sub">Business identity and contact information</p>
+      </div>
+      <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+
+    <div class="profile-grid">
+      <!-- Left: Avatar -->
+      <aside class="avatar-section">
+        <div class="avatar-frame" onclick="triggerUpload()">
+            <img src="https://api.dicebear.com/7.x/shapes/svg?seed=Clerk" id="profile-img" alt="Profile">
+            <div class="upload-overlay">Change Image</div>
+        </div>
+        <p class="group-desc" style="text-align: center;">Recommended: Square PNG or SVG. Max 2MB.</p>
+        <input type="file" id="file-input" style="display: none;" onchange="handleImage(this)">
+      </aside>
+
+      <!-- Right: Form Fields -->
+      <div style="display: flex; flex-direction: column; gap: 48px;">
+        
+        <!-- General Info -->
+        <section class="settings-group">
+            <div class="group-header">
+                <h2 class="group-title">General Information</h2>
+                <p class="group-desc">Public-facing business identifiers.</p>
+            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Business Name</label>
+                    <input type="text" value="Clerk Systems Ltd.">
+                </div>
+                <div class="input-group">
+                    <label>Registration Number (RC)</label>
+                    <input type="text" placeholder="RC-12345678">
+                </div>
+                <div class="input-group full-width">
+                    <label>Short Description</label>
+                    <textarea rows="2" placeholder="Tell customers what you do..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Business Address -->
+        <section class="settings-group">
+            <div class="group-header">
+                <h2 class="group-title">Contact & Address</h2>
+                <p class="group-desc">Used for invoicing and logistical coordination.</p>
+            </div>
+            <div class="form-grid">
+                <div class="input-group full-width">
+                    <label>Street Address</label>
+                    <input type="text" value="12 Admiralty Way, Lekki Phase 1">
+                </div>
+                <div class="input-group">
+                    <label>City</label>
+                    <input type="text" value="Lagos">
+                </div>
+                <div class="input-group">
+                    <label>State / Province</label>
+                    <input type="text" value="Lagos State">
+                </div>
+                <div class="input-group">
+                    <label>Support Email</label>
+                    <input type="email" value="support@clerk.network">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" value="+234 800 000 0000">
+                </div>
+            </div>
+        </section>
+
+        <!-- Social / Web -->
+        <section class="settings-group">
+            <div class="group-header">
+                <h2 class="group-title">Presence</h2>
+                <p class="group-desc">Link your digital footprint.</p>
+            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Website URL</label>
+                    <input type="text" placeholder="https://clerk.network">
+                </div>
+                <div class="input-group">
+                    <label>X (Twitter)</label>
+                    <input type="text" placeholder="@clerk_network">
+                </div>
+            </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  function triggerUpload() {
+    document.getElementById('file-input').click();
+  }
+
+  function handleImage(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('profile-img').src = e.target.result;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function saveProfile() {
+    // Show a custom success state instead of alert if possible
+    const btn = document.querySelector('.btn-primary');
+    const originalText = btn.innerText;
+    
+    btn.innerText = "SAVING...";
+    btn.style.opacity = "0.5";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.innerText = "UPDATED SUCCESSFULLY";
+        btn.style.background = "#EEECEA";
+        btn.style.color = "#080808";
+        btn.style.opacity = "1";
+        
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "var(--accent)";
+            btn.style.color = "var(--btn-fg)";
+            btn.disabled = false;
+        }, 2000);
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>

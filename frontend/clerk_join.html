@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Join</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+[data-theme="dark"]{
+  --bg:#080808;--bg-off:#0F0F0F;--bg-card:#101010;
+  --border:#1C1C1C;--border-md:#2A2A2A;--border-hi:#3A3A3A;
+  --text:#EEECEA;--text-sub:#484844;--text-dim:#252520;
+  --accent:#00E676;--accent-d:#003D1F;--accent-h:#00FF88;
+  --btn-fg:#080808;--grain:0.028;
+}
+[data-theme="light"]{
+  --bg:#F2F1ED;--bg-off:#EAEAE4;--bg-card:#E6E5E0;
+  --border:#D2D0CA;--border-md:#BCBBB6;--border-hi:#9E9D98;
+  --text:#111110;--text-sub:#888884;--text-dim:#CCCBC6;
+  --accent:#007A38;--accent-d:#D4EDDA;--accent-h:#009444;
+  --btn-fg:#FFFFFF;--grain:0.010;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;
+  transition:background .2s,color .2s;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:64px 64px;opacity:.4;pointer-events:none;
+}
+
+/* ── NAV ── */
+nav{
+  position:relative;z-index:10;
+  height:56px;padding:0 36px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,8,8,.75);backdrop-filter:blur(12px);
+  transition:background .2s,border-color .2s;
+}
+[data-theme="light"] nav{background:rgba(242,241,237,.85)}
+.wordmark{font-weight:800;font-size:17px;letter-spacing:.14em;color:var(--text);text-decoration:none}
+.wordmark span{color:var(--accent)}
+.nav-r{display:flex;align-items:center;gap:12px}
+.nav-link{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em;text-decoration:none;transition:color .15s}
+.nav-link:hover{color:var(--text)}
+.theme-btn{width:32px;height:32px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sub);transition:all .15s}
+.theme-btn:hover{border-color:var(--border-md);color:var(--text);background:var(--bg-off)}
+.theme-btn svg{width:13px;height:13px}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  padding:72px 36px 0;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:0;
+}
+.hero-tag{
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--accent);letter-spacing:.16em;text-transform:uppercase;
+  margin-bottom:20px;display:flex;align-items:center;gap:10px;
+  animation:fu .5s .05s both;
+}
+.hero-tag::before,.hero-tag::after{content:'';display:inline-block;width:24px;height:1px;background:var(--accent)}
+.hero-h{
+  font-size:clamp(40px,6vw,80px);font-weight:800;
+  letter-spacing:-.03em;line-height:.94;
+  margin-bottom:20px;animation:fu .5s .12s both;
+}
+.hero-h .ac{color:var(--accent)}
+.hero-sub{
+  font-family:'Space Mono',monospace;font-size:12px;
+  color:var(--text-sub);line-height:1.8;
+  max-width:420px;margin-bottom:56px;
+  animation:fu .5s .2s both;
+}
+
+/* ── ROLE CARDS ── */
+.cards-wrap{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  max-width:1080px;width:100%;margin:0 auto;
+  border:1px solid var(--border);
+  animation:fu .5s .28s both;
+}
+.role-card{
+  background:var(--bg-card);
+  display:flex;flex-direction:column;
+  padding:40px 36px 36px;
+  cursor:pointer;text-decoration:none;
+  transition:background .2s;
+  position:relative;overflow:hidden;
+}
+.role-card:hover{background:var(--bg-off)}
+/* Top accent line on hover */
+.role-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s ease;
+}
+.role-card:hover::before{transform:scaleX(1)}
+/* Active/selected */
+.role-card.selected{background:var(--bg-off)}
+.role-card.selected::before{transform:scaleX(1)}
+
+.card-icon{
+  width:52px;height:52px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;transition:border-color .2s;
+}
+.role-card:hover .card-icon,.role-card.selected .card-icon{border-color:var(--accent)}
+.card-icon svg{width:22px;height:22px;stroke:var(--text-sub);fill:none;transition:stroke .2s;stroke-width:1.2;stroke-linecap:round}
+.role-card:hover .card-icon svg,.role-card.selected .card-icon svg{stroke:var(--accent)}
+
+.card-type{
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--accent);letter-spacing:.14em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.card-title{
+  font-size:clamp(22px,2.5vw,32px);font-weight:800;
+  letter-spacing:-.025em;line-height:1;margin-bottom:16px;
+}
+.card-desc{
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--text-sub);line-height:1.8;flex:1;
+  margin-bottom:28px;
+}
+.card-perks{
+  display:flex;flex-direction:column;gap:8px;
+  margin-bottom:28px;
+}
+.perk{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--text-sub);letter-spacing:.05em;
+}
+.perk::before{
+  content:'';width:4px;height:4px;border-radius:50%;
+  background:var(--text-dim);flex-shrink:0;
+  transition:background .2s;
+}
+.role-card:hover .perk::before,.role-card.selected .perk::before{background:var(--accent)}
+
+.card-cta{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;
+  background:var(--bg);border:1px solid var(--border);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-sub);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.role-card:hover .card-cta,.role-card.selected .card-cta{
+  background:var(--accent);border-color:var(--accent);color:var(--btn-fg);
+}
+.cta-arrow{font-size:16px;font-weight:400}
+
+/* ── BOTTOM STRIP ── */
+.bottom-strip{
+  position:relative;z-index:1;
+  max-width:1080px;width:100%;margin:0 auto;
+  border:1px solid var(--border);border-top:none;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:var(--border);gap:1px;
+  animation:fu .5s .36s both;
+}
+.strip-cell{
+  background:var(--bg-off);padding:16px 20px;
+  display:flex;align-items:center;gap:12px;
+}
+.strip-num{
+  font-size:22px;font-weight:800;letter-spacing:-.025em;
+  color:var(--accent);flex-shrink:0;
+}
+.strip-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.08em;line-height:1.5}
+
+/* ── FOOTER ── */
+.page-footer{
+  position:relative;z-index:1;
+  padding:28px 36px;margin-top:auto;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  animation:fu .5s .44s both;
+}
+.footer-left{display:flex;align-items:center;gap:8px}
+.lpip{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pip 1.4s ease-in-out infinite}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:.2}}
+.footer-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.06em}
+.footer-txt strong{color:var(--text)}
+.signin-link{
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--accent);letter-spacing:.06em;text-decoration:none;
+  border-bottom:1px solid var(--accent-d);padding-bottom:2px;
+  transition:border-color .15s;
+}
+.signin-link:hover{border-color:var(--accent)}
+
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+@media(max-width:860px){
+  .cards-wrap{grid-template-columns:1fr}
+  .bottom-strip{grid-template-columns:1fr}
+  .hero{padding:48px 24px 0}
+  .hero-h{font-size:clamp(36px,10vw,56px)}
+  .role-card{padding:28px 24px}
+  .page-footer{flex-direction:column;gap:14px;text-align:center}
+}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<nav>
+  <a href="/" class="wordmark">CLR<span>K</span></a>
+  <div class="nav-r">
+    <a href="clerk_signin.html" class="nav-link">Sign in →</a>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="hero">
+  <p class="hero-tag">Join Clerk</p>
+  <h1 class="hero-h">Who are<br>you joining<br>as<span class="ac">?</span></h1>
+  <p class="hero-sub">Choose your role below. Each path is built specifically for how you'll use Clerk — your dashboard, features, and setup will be tailored accordingly.</p>
+</div>
+
+<div class="cards-wrap">
+
+  <!-- CUSTOMER -->
+  <a class="role-card" href="clerk_signup.html?role=customer" id="card-customer">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+    <span class="card-type">Customer</span>
+    <h2 class="card-title">Shop with cash.</h2>
+    <p class="card-desc">Buy from any Clerk-enabled merchant using cash you've deposited with a trusted local agent. No bank account or card required.</p>
+    <div class="card-perks">
+      <span class="perk">Biometric identity — your face is your card</span>
+      <span class="perk">Cash held in escrow by your chosen agent</span>
+      <span class="perk">Shop any Clerk merchant instantly</span>
+      <span class="perk">Download receipts and track all purchases</span>
+    </div>
+    <div class="card-cta">
+      <span>Register as Customer</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- MERCHANT -->
+  <a class="role-card" href="clerk_merchant_register.html" id="card-merchant">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </div>
+    <span class="card-type">Merchant</span>
+    <h2 class="card-title">Sell to everyone.</h2>
+    <p class="card-desc">Accept Clerk payments at checkout with a single redirect URL. Reach the 133M Nigerians who are cash-only and settle in seconds via Interswitch.</p>
+    <div class="card-perks">
+      <span class="perk">One redirect URL — no SDK or embed needed</span>
+      <span class="perk">Real-time settlement via Interswitch Payout</span>
+      <span class="perk">1.5% transaction fee — zero setup cost</span>
+      <span class="perk">Webhook-first API with signed payloads</span>
+    </div>
+    <div class="card-cta">
+      <span>Register as Merchant</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- AGENT -->
+  <a class="role-card" href="clerk_agent_register.html" id="card-agent">
+    <div class="card-icon">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    </div>
+    <span class="card-type">Agent</span>
+    <h2 class="card-title">Earn from trust.</h2>
+    <p class="card-desc">Your existing trust network becomes income. Hold customer cash in escrow, collect weekly custody fees, and approve payments with a single tap.</p>
+    <div class="card-perks">
+      <span class="perk">Earn 0.5% weekly on every naira held</span>
+      <span class="perk">Approve payments from anywhere — just tap</span>
+      <span class="perk">Works on any Android — no POS hardware</span>
+      <span class="perk">Built on OPay and Moniepoint rails</span>
+    </div>
+    <div class="card-cta">
+      <span>Register as Agent</span>
+      <span class="cta-arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- Stats strip -->
+<div class="bottom-strip">
+  <div class="strip-cell">
+    <span class="strip-num">41K+</span>
+    <span class="strip-label">Agent points already<br>in the network</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-num">₦0</span>
+    <span class="strip-label">Setup cost for<br>merchants and agents</span>
+  </div>
+  <div class="strip-cell">
+    <span class="strip-num">&lt;3s</span>
+    <span class="strip-label">Average time from<br>face scan to settled</span>
+  </div>
+</div>
+
+<footer class="page-footer">
+  <div class="footer-left">
+    <div class="lpip"></div>
+    <span class="footer-txt">All Clerk systems <strong>operational</strong></span>
+  </div>
+  <span class="footer-txt" style="color:var(--text-dim)">Already have an account?</span>
+  <a href="clerk_signin.html" class="signin-link">Sign in to Clerk →</a>
+</footer>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';
+  si();
+}
+function si(){
+  const d=document.documentElement.dataset.theme==='dark';
+  document.getElementById('ti').innerHTML=d
+    ?`<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+    :`<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+}
+si();
+</script>
+</body>
+</html>

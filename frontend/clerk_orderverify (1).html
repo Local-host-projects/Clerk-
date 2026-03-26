@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Confirm Order</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <style id="clerk-base">
+    [data-theme="dark"] {
+      --bg: #0A0A0A; --bg-off: #111111; --border: #1E1E1E; --border-mid: #2A2A2A;
+      --text: #F0EFE8; --text-muted: #4A4A4A; --text-dim: #222222;
+      --accent: #00E676; --accent-d: #003D1F; --accent-h: #00FF85;
+      --btn-fg: #0A0A0A; --grain: 0.026;
+    }
+    [data-theme="light"] {
+      --bg: #F4F3EF; --bg-off: #ECEAE5; --border: #D0CEC8; --border-mid: #BBBAB4;
+      --text: #111111; --text-muted: #888884; --text-dim: #D0CEC8;
+      --accent: #007A38; --accent-d: #D4EDDA; --accent-h: #009444;
+      --btn-fg: #FFFFFF; --grain: 0.012;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      transition: background .2s, color .2s;
+    }
+
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: var(--grain); pointer-events: none; z-index: 9999;
+    }
+
+    /* HEADER */
+    .clerk-header {
+      border-bottom: 1px solid var(--border); padding: 18px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg); position: sticky; top: 0; z-index: 100;
+      transition: background .2s, border-color .2s;
+    }
+    .clerk-wordmark { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: .15em; color: var(--text); }
+    .clerk-wordmark span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-meta { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: .08em; border: 1px solid var(--border); padding: 4px 10px; transition: color .2s, border-color .2s; }
+    .theme-toggle { width: 34px; height: 34px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all .15s; }
+    .theme-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg-off); }
+    .theme-toggle svg { width: 14px; height: 14px; }
+
+    /* GRID */
+    .checkout-grid { flex: 1; display: grid; grid-template-columns: 1fr 1px 400px; max-width: 1080px; width: 100%; margin: 0 auto; }
+    .divider-v { background: var(--border); transition: background .2s; }
+    .panel-left  { padding: 48px 40px; display: flex; flex-direction: column; }
+    .panel-right { padding: 48px 36px; display: flex; flex-direction: column; }
+    .panel-eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 28px; }
+
+    /* SHARED */
+    .c-block { border: 1px solid var(--border); transition: border-color .2s; }
+    .c-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); transition: background .2s; }
+    .c-row:last-child { border-bottom: none; }
+    .c-row--emphasis { background: var(--bg-off); }
+    .c-key { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: .08em; }
+    .c-val { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text); }
+    .c-val--accent { color: var(--accent); font-size: 18px; font-weight: 700; }
+    .c-sep { height: 1px; background: var(--border); margin: 20px 0; transition: background .2s; }
+    .c-btn-primary { width: 100%; background: var(--accent); color: var(--btn-fg); border: none; padding: 18px 24px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background .15s; }
+    .c-btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+    .c-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .c-btn-primary .arrow { font-size: 18px; font-weight: 400; }
+    .c-btn-ghost { width: 100%; background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 14px 24px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .08em; cursor: pointer; transition: border-color .15s, color .15s; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .c-btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
+    .c-badge { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .c-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+    .c-badge-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: .06em; }
+    .c-badge-text strong { color: var(--text); }
+
+    @media (max-width: 768px) {
+      .checkout-grid { grid-template-columns: 1fr; }
+      .divider-v { display: none; }
+      .panel-left { padding: 28px 20px; }
+      .panel-right { padding: 28px 20px; border-top: 1px solid var(--border); }
+      .clerk-header { padding: 14px 20px; }
+    }
+  </style>
+
+  <style id="clerk-page-confirm">
+
+    /* ── STATE SCREENS ───────────────────────────────── */
+    /* Each screen is shown/hidden; only one visible at a time */
+    .screen { display: none; flex-direction: column; flex: 1; }
+    .screen.active { display: flex; }
+
+    /* ── SCREEN 1: ORDER ID ENTRY ────────────────────── */
+    .entry-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-width: 420px;
+    }
+
+    .entry-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      margin-bottom: 10px;
+    }
+
+    .entry-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+
+    .id-input-wrap {
+      border: 1px solid var(--border);
+      background: var(--bg-off);
+      display: flex;
+      align-items: stretch;
+      margin-bottom: 8px;
+      transition: border-color .2s;
+    }
+
+    .id-input-wrap:focus-within { border-color: var(--border-mid); }
+    .id-input-wrap.error { border-color: #FF4444; }
+
+    .id-prefix {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 14px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      letter-spacing: .06em;
+      flex-shrink: 0;
+      transition: border-color .2s;
+    }
+
+    .id-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 16px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .id-input::placeholder { color: var(--text-dim); font-weight: 400; letter-spacing: .04em; }
+
+    .id-error {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: #FF4444;
+      letter-spacing: .06em;
+      min-height: 18px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .id-error.show { display: block; }
+
+    /* Recent order IDs */
+    .recent-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+
+    .recent-item:hover { background: var(--bg-off); border-color: var(--border-mid); }
+
+    .recent-id {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: .06em;
+    }
+
+    .recent-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+    }
+
+    /* ── LEFT PANEL — VISUAL ─────────────────────────── */
+
+    /* Merchant identity block */
+    .merchant-identity {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--bg-off);
+      overflow: hidden;
+      margin-bottom: 24px;
+      transition: border-color .4s, background .2s;
+      position: relative;
+    }
+
+    .merchant-identity.verified { border-color: var(--accent); }
+
+    .merchant-identity-inner {
+      padding: 32px 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Verified ribbon */
+    .verified-ribbon {
+      position: absolute;
+      top: 0; right: 0;
+      background: var(--accent);
+      color: var(--btn-fg);
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      padding: 4px 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity .4s .2s;
+    }
+
+    .merchant-identity.verified .verified-ribbon { opacity: 1; }
+
+    /* Merchant logo placeholder */
+    .merchant-logo {
+      width: 56px; height: 56px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: .06em;
+      color: var(--accent);
+      transition: border-color .4s;
+    }
+
+    .merchant-identity.verified .merchant-logo { border-color: var(--accent); }
+
+    .merchant-name {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1;
+    }
+
+    .merchant-handle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+    }
+
+    /* Clerk verified mark */
+    .clerk-verified {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      transition: border-color .4s, background .4s;
+    }
+
+    .merchant-identity.verified .clerk-verified {
+      border-color: var(--accent-d);
+      background: var(--accent-d);
+    }
+
+    .verified-icon {
+      width: 16px; height: 16px;
+      background: var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .4s;
+    }
+
+    .merchant-identity.verified .verified-icon { background: var(--accent); }
+
+    .verified-icon svg {
+      width: 9px; height: 9px;
+      stroke: var(--text-dim);
+      fill: none;
+      transition: stroke .4s;
+    }
+
+    .merchant-identity.verified .verified-icon svg { stroke: var(--btn-fg); }
+
+    .verified-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      transition: color .4s;
+    }
+
+    .merchant-identity.verified .verified-text { color: var(--accent); }
+
+    /* Order preview card */
+    .order-preview {
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .4s .1s, transform .4s .1s, border-color .2s;
+    }
+
+    .order-preview.show { opacity: 1; transform: none; }
+
+    /* Redacted row — shows blurred placeholder until confirmed */
+    .c-row--redacted .c-val {
+      position: relative;
+      color: transparent;
+      user-select: none;
+    }
+
+    .c-row--redacted .c-val::after {
+      content: attr(data-redact);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      color: transparent;
+      background: var(--border);
+      border-radius: 2px;
+      font-size: 10px;
+      letter-spacing: .04em;
+      filter: blur(0);
+    }
+
+    /* Animated loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--border-mid) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-scan 1.4s ease-in-out infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes skeleton-scan {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Type icon in left panel */
+    .asset-type-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 4px;
+    }
+
+    .asset-type-icon {
+      width: 36px; height: 36px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .asset-type-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; }
+
+    .asset-type-info { display: flex; flex-direction: column; gap: 3px; }
+
+    .asset-type-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .asset-type-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    /* ── STEPS ───────────────────────────────────────── */
+    .steps { display: flex; align-items: center; margin-bottom: 28px; }
+    .step  { display: flex; align-items: center; gap: 8px; }
+    .snum  { width: 22px; height: 22px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-dim); flex-shrink: 0; transition: all .2s; }
+    .snum.done   { border-color: var(--accent); color: var(--btn-fg); background: var(--accent); }
+    .snum.active { border-color: var(--accent); color: var(--accent); }
+    .sname { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
+    .sname.done   { color: var(--accent); }
+    .sname.active { color: var(--text-muted); }
+    .sline { flex: 1; height: 1px; background: var(--border); margin: 0 10px; min-width: 20px; transition: background .3s; }
+    .sline.done { background: var(--accent); }
+
+    /* ── RIGHT PANEL STATES ──────────────────────────── */
+    .right-state { display: none; flex-direction: column; flex: 1; }
+    .right-state.active { display: flex; }
+
+    /* Loading state */
+    .loading-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .skel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+    }
+
+    .skel-key { width: 80px; height: 10px; }
+    .skel-val { width: 120px; height: 10px; }
+    .skel-val-wide { width: 160px; height: 10px; }
+
+    /* Confirm state — full order */
+    .confirm-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      margin-bottom: 8px;
+    }
+
+    .confirm-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* Security notice */
+    .security-notice {
+      border: 1px solid var(--border);
+      background: var(--bg-off);
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      transition: border-color .2s, background .2s;
+    }
+
+    .security-notice svg { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; flex-shrink: 0; margin-top: 1px; }
+    .security-notice p { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); line-height: 1.65; letter-spacing: .04em; }
+    .security-notice p strong { color: var(--text); }
+
+    /* Wrong order link */
+    .wrong-order {
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .wrong-order a {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="clerk-header">
+    <div class="clerk-wordmark">CLR<span>K</span></div>
+    <div class="header-right">
+      <div class="header-meta" id="header-meta">VERIFY ORDER</div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="checkout-grid">
+
+    <!-- LEFT PANEL -->
+    <section class="panel-left">
+
+      <!-- STATE: IDLE — no order entered yet -->
+      <div class="screen active" id="left-idle">
+        <p class="panel-eyebrow">ORDER LOOKUP</p>
+
+        <div style="width:100%;aspect-ratio:4/3;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;margin-bottom:32px;position:relative;overflow:hidden">
+          <!-- Background grid -->
+          <div style="position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.5"></div>
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:16px">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="0.8" stroke-linecap="round">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4"/>
+              <line x1="9" y1="12" x2="15" y2="12"/>
+              <line x1="9" y1="16" x2="12" y2="16"/>
+            </svg>
+            <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.12em">ENTER ORDER ID TO CONTINUE</span>
+          </div>
+        </div>
+
+        <h2 style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">What is an Order ID?</h2>
+        <p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-muted);line-height:1.8;margin-bottom:24px">Your order ID was given to you by the merchant when you placed your order. It looks like <strong style="color:var(--text)">CLK-2024-00847</strong>.</p>
+
+        <div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--border);padding-top:20px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:20px;height:20px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);font-weight:700">1</span>
+            </div>
+            <p style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.65">Enter your order ID from the merchant's confirmation screen or message.</p>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:20px;height:20px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text-muted);font-weight:700">2</span>
+            </div>
+            <p style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.65">We'll show you the merchant name and order details to confirm everything is correct.</p>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:20px;height:20px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+              <span style="font-family:'Space Mono',monospace;font-size:8px;color:var(--text-muted);font-weight:700">3</span>
+            </div>
+            <p style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.65">Scan your face to authorise the payment from your Clerk escrow balance.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE: LOADING — skeleton while fetching order -->
+      <div class="screen" id="left-loading">
+        <p class="panel-eyebrow">LOOKING UP ORDER</p>
+        <div style="width:100%;aspect-ratio:4/3;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center;margin-bottom:32px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="0.8" stroke-linecap="round" style="animation:spin 1.2s linear infinite">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="40" stroke-dashoffset="10"/>
+            </svg>
+            <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.1em" id="loading-text">VERIFYING ORDER...</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:14px;width:60%"></div>
+          <div class="skeleton" style="height:10px;width:40%;margin-top:4px"></div>
+          <div class="skeleton" style="height:10px;width:50%"></div>
+        </div>
+      </div>
+
+      <!-- STATE: CONFIRMED — merchant identity shown -->
+      <div class="screen" id="left-confirmed">
+        <p class="panel-eyebrow">MERCHANT VERIFIED</p>
+
+        <div class="merchant-identity" id="merchant-identity">
+          <div class="verified-ribbon">Clerk Verified</div>
+          <div class="merchant-identity-inner">
+            <div class="merchant-logo" id="merchant-logo">AS</div>
+            <div>
+              <div class="merchant-name" id="merchant-name">Arua Studio</div>
+              <div class="merchant-handle" id="merchant-handle">clerk.ng/arua-studio · Active since Jan 2024</div>
+            </div>
+            <div class="clerk-verified">
+              <div class="verified-icon">
+                <svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="2,6 5,9 10,3"/>
+                </svg>
+              </div>
+              <span class="verified-text">Verified Clerk merchant · 342 completed orders</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-preview c-block" id="order-preview">
+          <div class="c-row">
+            <span class="c-key">ORDER REF</span>
+            <span class="c-val" id="conf-order-ref" style="color:var(--accent)">CLK-2024-00847</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">PRODUCT TYPE</span>
+            <span class="c-val" id="conf-product-type">Physical Goods</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">ITEM COUNT</span>
+            <span class="c-val" id="conf-item-count">1 item</span>
+          </div>
+          <div class="c-row c-row--emphasis">
+            <span class="c-key" style="color:var(--text)">AMOUNT DUE</span>
+            <span class="c-val c-val--accent" id="conf-amount">₦24,869</span>
+          </div>
+        </div>
+
+        <div class="asset-type-row" id="asset-type-row">
+          <div class="asset-type-icon" id="asset-icon">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          </div>
+          <div class="asset-type-info">
+            <span class="asset-type-label">DELIVERY METHOD</span>
+            <span class="asset-type-value" id="conf-delivery">Physical — Lagos delivery</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="divider-v"></div>
+
+    <!-- RIGHT PANEL -->
+    <section class="panel-right">
+
+      <!-- STATE: ENTRY — type order ID -->
+      <div class="right-state active" id="right-entry">
+        <div class="steps">
+          <div class="step"><div class="snum active">1</div><span class="sname active">VERIFY</span></div>
+          <div class="sline"></div>
+          <div class="step"><div class="snum">2</div><span class="sname">SCAN</span></div>
+          <div class="sline"></div>
+          <div class="step"><div class="snum">3</div><span class="sname">CONFIRM</span></div>
+        </div>
+
+        <div class="entry-wrap">
+          <h2 class="entry-title">Enter your<br>Order ID.</h2>
+          <p class="entry-sub">Type the order reference given to you by the merchant. It starts with <strong style="color:var(--text)">CLK-</strong>.</p>
+
+          <div class="id-input-wrap" id="id-input-wrap">
+            <span class="id-prefix">CLK-</span>
+            <input
+              class="id-input"
+              id="order-id-input"
+              type="text"
+              placeholder="2024-00000"
+              maxlength="12"
+              oninput="onIdInput(this)"
+              onkeydown="if(event.key==='Enter') lookupOrder()"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+
+          <span class="id-error" id="id-error">Order not found. Check the ID and try again.</span>
+
+          <button class="c-btn-primary" id="lookup-btn" onclick="lookupOrder()" style="margin-bottom:20px">
+            <span id="lookup-label">Look Up Order</span>
+            <span class="arrow" id="lookup-arrow">→</span>
+          </button>
+
+          <!-- Recent orders -->
+          <div id="recent-wrap" style="margin-top:12px">
+            <p class="recent-label">Recent lookups</p>
+            <div class="recent-list">
+              <div class="recent-item" onclick="fillId('2024-00846')">
+                <span class="recent-id">CLK-2024-00846</span>
+                <span class="recent-meta">Arua Studio · ₦9,000</span>
+              </div>
+              <div class="recent-item" onclick="fillId('2024-00843')">
+                <span class="recent-id">CLK-2024-00843</span>
+                <span class="recent-meta">Arua Studio · ₦15,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="c-badge">
+          <div class="c-badge-dot"></div>
+          <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+        </div>
+      </div>
+
+      <!-- STATE: LOADING -->
+      <div class="right-state" id="right-loading">
+        <div class="steps">
+          <div class="step"><div class="snum active">1</div><span class="sname active">VERIFY</span></div>
+          <div class="sline"></div>
+          <div class="step"><div class="snum">2</div><span class="sname">SCAN</span></div>
+          <div class="sline"></div>
+          <div class="step"><div class="snum">3</div><span class="sname">CONFIRM</span></div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <div class="skeleton" style="height:22px;width:55%;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:11px;width:80%"></div>
+          <div class="skeleton" style="height:11px;width:65%;margin-top:6px"></div>
+        </div>
+
+        <div class="c-sep"></div>
+
+        <div class="loading-block">
+          <div class="skel-row">
+            <div class="skel-key skeleton"></div><div class="skel-val skeleton"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel-key skeleton"></div><div class="skel-val-wide skeleton"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel-key skeleton"></div><div class="skel-val skeleton"></div>
+          </div>
+          <div class="skel-row">
+            <div class="skel-key skeleton"></div><div class="skel-val skeleton"></div>
+          </div>
+        </div>
+
+        <div class="c-badge" style="margin-top:auto">
+          <div class="c-badge-dot"></div>
+          <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+        </div>
+      </div>
+
+      <!-- STATE: CONFIRMED -->
+      <div class="right-state" id="right-confirmed">
+        <div class="steps">
+          <div class="step"><div class="snum done">✓</div><span class="sname done">VERIFY</span></div>
+          <div class="sline done"></div>
+          <div class="step"><div class="snum active">2</div><span class="sname active">SCAN</span></div>
+          <div class="sline"></div>
+          <div class="step"><div class="snum">3</div><span class="sname">CONFIRM</span></div>
+        </div>
+
+        <h2 class="confirm-title" id="confirm-title">Is this your order?</h2>
+        <p class="confirm-sub" id="confirm-sub">Review the details below. We only show enough to confirm — your full order is kept private until you scan your face.</p>
+
+        <!-- What we show vs hide notice -->
+        <div class="security-notice">
+          <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <p>We show <strong>merchant identity, item count, and total</strong> only. Delivery address, personal details, and product names are hidden until your face is verified.</p>
+        </div>
+
+        <!-- Order detail rows — deliberately partial -->
+        <div class="c-block" style="margin-bottom:16px" id="confirm-detail-block">
+          <div class="c-row">
+            <span class="c-key">MERCHANT</span>
+            <span class="c-val" id="detail-merchant" style="font-family:'Syne',sans-serif;font-weight:800">Arua Studio</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">ORDER ID</span>
+            <span class="c-val" id="detail-order-id" style="color:var(--accent)">CLK-2024-00847</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">ITEMS</span>
+            <span class="c-val" id="detail-items">1 item</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">ORDER DATE</span>
+            <span class="c-val" id="detail-date">Today · 2:22 PM</span>
+          </div>
+          <div class="c-row">
+            <span class="c-key">AGENT</span>
+            <span class="c-val" id="detail-agent">Emeka Obi — Yaba</span>
+          </div>
+          <!-- Redacted rows -->
+          <div class="c-row c-row--redacted">
+            <span class="c-key">PRODUCT</span>
+            <span class="c-val" data-redact="hidden until scan">—</span>
+          </div>
+          <div class="c-row c-row--redacted">
+            <span class="c-key">DELIVERY ADDRESS</span>
+            <span class="c-val" data-redact="hidden until scan">—</span>
+          </div>
+          <div class="c-row c-row--emphasis">
+            <span class="c-key" style="color:var(--text)">TOTAL DUE</span>
+            <span class="c-val c-val--accent" id="detail-total">₦24,869</span>
+          </div>
+        </div>
+
+        <!-- Redacted field explanation -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;padding:10px 14px;border:1px dashed var(--border)">
+          <div style="width:32px;height:10px;background:var(--border);border-radius:2px;flex-shrink:0"></div>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:.08em">Greyed rows are revealed after face verification</span>
+        </div>
+
+        <button class="c-btn-primary" onclick="proceedToScan()">
+          <span>Confirm & Scan Face</span>
+          <span class="arrow">→</span>
+        </button>
+
+        <p class="wrong-order">
+          Not your order? <a onclick="resetFlow()">Enter a different ID</a>
+        </p>
+
+        <div class="c-badge" style="margin-top:20px">
+          <div class="c-badge-dot"></div>
+          <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+  // ── MOCK ORDER DATABASE ─────────────────────────────
+  // In production: replaced by GET /api/orders/{id}/preview
+  const ORDERS = {
+    '2024-00847': {
+      id: 'CLK-2024-00847',
+      merchant: { name: 'Arua Studio', initials: 'AS', handle: 'clerk.ng/arua-studio · Active since Jan 2024', verified: true, orderCount: 342 },
+      type: 'physical',
+      items: 1,
+      amount: 24869,
+      date: 'Today · 2:22 PM',
+      agent: 'Emeka Obi — Yaba',
+      delivery: 'Physical — Lagos delivery',
+    },
+    '2024-00846': {
+      id: 'CLK-2024-00846',
+      merchant: { name: 'Arua Studio', initials: 'AS', handle: 'clerk.ng/arua-studio · Active since Jan 2024', verified: true, orderCount: 342 },
+      type: 'physical',
+      items: 1,
+      amount: 9000,
+      date: 'Today · 11:05 AM',
+      agent: 'Amaka Eze — Ikeja',
+      delivery: 'Physical — Lagos delivery',
+    },
+    '2024-00845': {
+      id: 'CLK-2024-00845',
+      merchant: { name: 'Arua Studio', initials: 'AS', handle: 'clerk.ng/arua-studio · Active since Jan 2024', verified: true, orderCount: 342 },
+      type: 'digital',
+      items: 1,
+      amount: 4500,
+      date: 'Today · 9:48 AM',
+      agent: 'Chidi Okeke — VI',
+      delivery: 'Digital — Instant download after payment',
+    },
+    '2024-00843': {
+      id: 'CLK-2024-00843',
+      merchant: { name: 'Arua Studio', initials: 'AS', handle: 'clerk.ng/arua-studio · Active since Jan 2024', verified: true, orderCount: 342 },
+      type: 'physical',
+      items: 1,
+      amount: 15000,
+      date: 'Yesterday · 6:34 PM',
+      agent: 'Emeka Obi — Yaba',
+      delivery: 'Physical — Lagos delivery',
+    },
+  };
+
+  // ── STATE ────────────────────────────────────────────
+  let currentInput = '';
+
+  // ── INPUT HANDLER ────────────────────────────────────
+  function onIdInput(el) {
+    // Strip non-alphanumeric, uppercase
+    let v = el.value.replace(/[^A-Z0-9\-]/gi, '').toUpperCase();
+    el.value = v;
+    currentInput = v;
+    document.getElementById('id-input-wrap').classList.remove('error');
+    document.getElementById('id-error').classList.remove('show');
+  }
+
+  function fillId(val) {
+    const input = document.getElementById('order-id-input');
+    input.value = val.toUpperCase();
+    currentInput = val.toUpperCase();
+    lookupOrder();
+  }
+
+  // ── LOOKUP ────────────────────────────────────────────
+  async function lookupOrder() {
+    const raw   = document.getElementById('order-id-input').value.trim().toUpperCase();
+    const key   = raw.startsWith('CLK-') ? raw.slice(4) : raw;
+    const btn   = document.getElementById('lookup-btn');
+    const lbl   = document.getElementById('lookup-label');
+    const arrow = document.getElementById('lookup-arrow');
+
+    if (!key) {
+      document.getElementById('id-input-wrap').classList.add('error');
+      document.getElementById('id-error').textContent = 'Please enter your order ID.';
+      document.getElementById('id-error').classList.add('show');
+      return;
+    }
+
+    // Show loading
+    btn.disabled  = true;
+    lbl.textContent = 'Looking up...';
+    arrow.textContent = '◌';
+    showState('loading');
+
+    // Simulate network call — replace with:
+    // const res = await fetch(`/api/orders/${key}/preview`);
+    await new Promise(r => setTimeout(r, 1800));
+
+    const order = ORDERS[key];
+
+    btn.disabled  = false;
+    lbl.textContent = 'Look Up Order';
+    arrow.textContent = '→';
+
+    if (!order) {
+      // Not found — return to entry with error
+      showState('entry');
+      document.getElementById('id-input-wrap').classList.add('error');
+      document.getElementById('id-error').textContent = 'Order not found. Double-check the ID from your merchant.';
+      document.getElementById('id-error').classList.add('show');
+      return;
+    }
+
+    populateConfirm(order);
+    showState('confirmed');
+  }
+
+  // ── POPULATE ─────────────────────────────────────────
+  function populateConfirm(order) {
+    const m = order.merchant;
+
+    // Left panel — merchant identity
+    document.getElementById('merchant-logo').textContent = m.initials;
+    document.getElementById('merchant-name').textContent = m.name;
+    document.getElementById('merchant-handle').textContent = m.handle;
+
+    // Verified badge text
+    document.querySelector('.verified-text').textContent =
+      `Verified Clerk merchant · ${m.orderCount} completed orders`;
+
+    // Order preview (left)
+    document.getElementById('conf-order-ref').textContent    = order.id;
+    document.getElementById('conf-product-type').textContent = order.type === 'digital' ? 'Digital Product' : 'Physical Goods';
+    document.getElementById('conf-item-count').textContent   = order.items + (order.items === 1 ? ' item' : ' items');
+    document.getElementById('conf-amount').textContent       = '₦' + order.amount.toLocaleString('en-NG');
+    document.getElementById('conf-delivery').textContent     = order.delivery;
+
+    // Asset type icon
+    const iconEl = document.getElementById('asset-icon');
+    iconEl.innerHTML = order.type === 'digital'
+      ? `<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="var(--accent)"><rect x="2" y="3" width="20" height="14"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`
+      : `<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" fill="none" stroke="var(--accent)"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>`;
+
+    // Right panel — confirm detail
+    document.getElementById('detail-merchant').textContent = m.name;
+    document.getElementById('detail-order-id').textContent = order.id;
+    document.getElementById('detail-items').textContent    = order.items + (order.items === 1 ? ' item' : ' items');
+    document.getElementById('detail-date').textContent     = order.date;
+    document.getElementById('detail-agent').textContent    = order.agent;
+    document.getElementById('detail-total').textContent    = '₦' + order.amount.toLocaleString('en-NG');
+
+    // Header meta
+    document.getElementById('header-meta').textContent = 'CONFIRM ORDER / STEP 1 OF 3';
+
+    // Animate merchant identity verified state after slight delay
+    setTimeout(() => {
+      document.getElementById('merchant-identity').classList.add('verified');
+      document.getElementById('order-preview').classList.add('show');
+    }, 300);
+  }
+
+  // ── NAVIGATION ────────────────────────────────────────
+  function showState(s) {
+    // Left
+    ['idle','loading','confirmed'].forEach(id => {
+      document.getElementById('left-' + id).classList.toggle('active', id === s);
+    });
+    // Right
+    ['entry','loading','confirmed'].forEach(id => {
+      document.getElementById('right-' + id).classList.toggle('active', id === s);
+    });
+  }
+
+  function resetFlow() {
+    document.getElementById('merchant-identity').classList.remove('verified');
+    document.getElementById('order-preview').classList.remove('show');
+    document.getElementById('order-id-input').value = '';
+    document.getElementById('id-input-wrap').classList.remove('error');
+    document.getElementById('id-error').classList.remove('show');
+    document.getElementById('header-meta').textContent = 'VERIFY ORDER';
+    showState('entry');
+  }
+
+  function proceedToScan() {
+    // In production: window.location.href = '/checkout/face-scan?order=' + orderId
+    window.location.href = 'clerk_facescan.html';
+  }
+
+  // ── THEME ─────────────────────────────────────────────
+  function toggleTheme() {
+    const h = document.documentElement;
+    h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+    syncThemeIcon();
+  }
+
+  function syncThemeIcon() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    document.getElementById('theme-icon').innerHTML = dark
+      ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+      : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+  }
+
+  // ── MISC ──────────────────────────────────────────────
+  // Allow URL param to pre-fill: ?order=2024-00847
+  const params = new URLSearchParams(location.search);
+  if (params.get('order')) {
+    fillId(params.get('order'));
+  }
+
+  syncThemeIcon();
+  </script>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .c-row--redacted .c-val { min-width: 120px; }
+    .c-row--redacted .c-val::after {
+      content: ''; display: block;
+      height: 10px; width: 110px;
+      background: var(--border); border-radius: 2px;
+      margin-left: auto;
+    }
+  </style>
+
+</body>
+</html>

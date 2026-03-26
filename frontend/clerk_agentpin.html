@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Agent PIN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    [data-theme="dark"] {
+      --bg:#0A0A0A;--bg-off:#111111;--border:#1E1E1E;--border-mid:#2A2A2A;
+      --text:#F0EFE8;--text-muted:#4A4A4A;--text-dim:#252525;
+      --accent:#00E676;--accent-d:#003D1F;--accent-h:#00FF85;
+      --btn-fg:#0A0A0A;--red:#FF4444;--red-d:#2A0808;--grain:0.026;
+    }
+    [data-theme="light"] {
+      --bg:#F4F3EF;--bg-off:#ECEAE5;--border:#D0CEC8;--border-mid:#BBBAB4;
+      --text:#111111;--text-muted:#888884;--text-dim:#D0CEC8;
+      --accent:#007A38;--accent-d:#D4EDDA;--accent-h:#009444;
+      --btn-fg:#FFFFFF;--red:#CC2222;--red-d:#FDECEA;--grain:0.012;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--grain);pointer-events:none;z-index:9999}
+
+    /* HEADER */
+    .clerk-header{border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:100;transition:background .2s,border-color .2s}
+    .clerk-wordmark{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;letter-spacing:.15em;color:var(--text)}
+    .clerk-wordmark span{color:var(--accent)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .header-meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.08em;border:1px solid var(--border);padding:4px 10px}
+    .theme-toggle{width:34px;height:34px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all .15s}
+    .theme-toggle:hover{border-color:var(--border-mid);color:var(--text);background:var(--bg-off)}
+    .theme-toggle svg{width:14px;height:14px}
+
+    /* GRID */
+    .checkout-grid{flex:1;display:grid;grid-template-columns:1fr 1px 400px;max-width:1080px;width:100%;margin:0 auto}
+    .divider-v{background:var(--border)}
+    .panel-left{padding:48px 40px;display:flex;flex-direction:column}
+    .panel-right{padding:48px 36px;display:flex;flex-direction:column}
+    .panel-eyebrow{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:28px}
+
+    /* SHARED */
+    .c-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);transition:background .2s}
+    .c-row:last-child{border-bottom:none}
+    .c-key{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.08em}
+    .c-val{font-family:'Space Mono',monospace;font-size:13px;color:var(--text)}
+    .c-sep{height:1px;background:var(--border);margin:20px 0}
+    .c-badge{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .c-badge-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;flex-shrink:0}
+    .c-badge-text{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.06em}
+    .c-badge-text strong{color:var(--text)}
+
+    /* ── LEFT PANEL ────────────────────────────────── */
+    .order-card{border:1px solid var(--border);margin-bottom:24px;transition:border-color .4s}
+
+    .order-card-header{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:space-between}
+    .order-card-title{font-size:13px;font-weight:800;letter-spacing:-.01em}
+    .order-card-ref{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.06em}
+
+    .amount-display{padding:28px 24px;text-align:center;border-bottom:1px solid var(--border);background:var(--bg-off);display:flex;flex-direction:column;align-items:center;gap:6px}
+    .amount-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase}
+    .amount-value{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--text)}
+    .amount-value span{color:var(--accent)}
+    .amount-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.04em}
+
+    .merchant-strip{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border)}
+    .merchant-avatar{width:32px;height:32px;border:1px solid var(--border);background:var(--accent-d);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;color:var(--accent);flex-shrink:0}
+    .merchant-info{display:flex;flex-direction:column;gap:2px;flex:1}
+    .merchant-name{font-size:13px;font-weight:800;letter-spacing:-.01em}
+    .merchant-clerk-id{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.06em}
+    .verified-chip{display:flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.08em}
+    .verified-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+    .agent-balance{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg)}
+    .balance-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.08em}
+    .balance-after{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+    .balance-current{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);text-decoration:line-through}
+    .balance-new{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text)}
+
+    /* flow diagram */
+    .escrow-flow{border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px}
+    .flow-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+    .flow-nodes{display:flex;align-items:center}
+    .flow-node{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+    .flow-node-icon{width:40px;height:40px;border:1px solid var(--border);background:var(--bg-off);display:flex;align-items:center;justify-content:center}
+    .flow-node-icon svg{width:16px;height:16px;stroke:var(--text-muted);fill:none}
+    .flow-node-icon.active-node{border-color:var(--accent);background:var(--accent-d)}
+    .flow-node-icon.active-node svg{stroke:var(--accent)}
+    .flow-node-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:.06em}
+    .flow-arrow{font-size:14px;color:var(--text-dim);flex-shrink:0;margin:0 4px;margin-bottom:22px}
+    .flow-arrow.active{color:var(--accent)}
+
+    /* ── RIGHT PANEL ───────────────────────────────── */
+    .pin-title{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-bottom:6px}
+    .pin-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-muted);line-height:1.7;margin-bottom:28px}
+
+    /* PIN dots */
+    .pin-dots{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:8px;padding:24px 0;border:1px solid var(--border);background:var(--bg-off);position:relative;overflow:hidden;transition:border-color .3s}
+    .pin-dots.loading::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,230,118,.08),transparent);animation:pin-shimmer 1s ease-in-out infinite}
+    @keyframes pin-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+    .pin-dots.shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97) both}
+    @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+
+    .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);background:transparent;transition:background .12s,border-color .12s,transform .12s}
+    .pin-dot.filled{background:var(--accent);border-color:var(--accent);transform:scale(1.1)}
+    .pin-dot.error{background:var(--red);border-color:var(--red)}
+
+    .pin-error{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:.06em;text-align:center;min-height:18px;margin-bottom:4px}
+    .attempts-row{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.06em;text-align:center;margin-bottom:16px}
+    .attempts-row span{color:#F59E0B;font-weight:700}
+
+    /* Numpad */
+    .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:12px}
+    .numpad-key{background:var(--bg);border:none;padding:20px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:background .12s;position:relative;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent}
+    .numpad-key:hover{background:var(--bg-off)}
+    .numpad-key::after{content:'';position:absolute;width:60px;height:60px;border-radius:50%;background:var(--accent);opacity:0;transform:scale(0);pointer-events:none}
+    .numpad-key.ripple::after{animation:ripple .4s ease-out forwards}
+    @keyframes ripple{0%{transform:scale(0);opacity:.25}100%{transform:scale(2.5);opacity:0}}
+    .key-digit{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text);line-height:1;letter-spacing:-.02em}
+    .key-letters{font-family:'Space Mono',monospace;font-size:7px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase}
+    .numpad-key.key-action{background:var(--bg-off)}
+    .numpad-key.key-action:hover{filter:brightness(1.08)}
+    .key-action-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase}
+
+    /* Locked */
+    .locked-banner{display:none;border:1px solid var(--red);background:var(--red-d);padding:14px 18px;margin-bottom:16px;flex-direction:column;gap:6px}
+    .locked-banner.show{display:flex}
+    .locked-title{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);font-weight:700;letter-spacing:.06em}
+    .locked-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:.04em;opacity:.8}
+
+    /* Success */
+    .success-state{display:none;flex-direction:column;align-items:center;gap:16px;padding:32px 0;text-align:center;animation:fade-up .4s both}
+    .success-state.show{display:flex}
+    @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+    .success-check{width:64px;height:64px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .success-check svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-dasharray:40;stroke-dashoffset:40;animation:draw-check .4s .1s ease-out forwards}
+    @keyframes draw-check{to{stroke-dashoffset:0}}
+    .success-title{font-size:20px;font-weight:800;letter-spacing:-.01em}
+    .success-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.06em;line-height:1.65}
+
+    /* Footer links */
+    .pin-footer{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+    .forgot-link{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:.06em}
+    .forgot-link a{color:var(--accent);cursor:pointer;text-decoration:none}
+    .forgot-link a:hover{text-decoration:underline}
+
+    @media(max-width:768px){
+      .checkout-grid{grid-template-columns:1fr}
+      .divider-v{display:none}
+      .panel-left{padding:28px 20px}
+      .panel-right{padding:28px 20px;border-top:1px solid var(--border)}
+      .clerk-header{padding:14px 20px}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="clerk-header">
+    <div class="clerk-wordmark">CLR<span>K</span></div>
+    <div class="header-right">
+      <div class="header-meta">AGENT APPROVAL</div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="checkout-grid">
+
+    <!-- LEFT -->
+    <section class="panel-left">
+      <p class="panel-eyebrow">PAYMENT REQUEST</p>
+
+      <div class="order-card" id="order-card">
+        <div class="order-card-header">
+          <span class="order-card-title">Release from Escrow</span>
+          <span class="order-card-ref">CLK-2024-00847</span>
+        </div>
+
+        <div class="amount-display">
+          <span class="amount-label">Amount to Release</span>
+          <div class="amount-value"><span>₦</span>24,869</div>
+          <span class="amount-sub">incl. 1.5% Clerk fee</span>
+        </div>
+
+        <div class="merchant-strip">
+          <div class="merchant-avatar">AS</div>
+          <div class="merchant-info">
+            <span class="merchant-name">Arua Studio</span>
+            <span class="merchant-clerk-id">clerk.ng/arua-studio</span>
+          </div>
+          <span class="verified-chip">Verified</span>
+        </div>
+
+        <div class="c-row"><span class="c-key">CUSTOMER</span><span class="c-val">USR-4821</span></div>
+        <div class="c-row"><span class="c-key">ITEM</span><span class="c-val">Structured Canvas Tote</span></div>
+        <div class="c-row"><span class="c-key">REQUESTED</span><span class="c-val">2:22 PM · Today</span></div>
+
+        <div class="agent-balance">
+          <span class="balance-label">Your escrow balance</span>
+          <div class="balance-after">
+            <span class="balance-current">₦42,000</span>
+            <span class="balance-new" id="balance-new">→ ₦17,131</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="escrow-flow">
+        <p class="flow-label">Transaction Flow</p>
+        <div class="flow-nodes">
+          <div class="flow-node">
+            <div class="flow-node-icon">
+              <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <span class="flow-node-label">You<br>(Agent)</span>
+          </div>
+          <div class="flow-arrow active">→</div>
+          <div class="flow-node">
+            <div class="flow-node-icon active-node">
+              <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <span class="flow-node-label">Escrow<br>(Clerk)</span>
+          </div>
+          <div class="flow-arrow" id="flow-arrow-2">→</div>
+          <div class="flow-node">
+            <div class="flow-node-icon" id="merchant-flow-icon">
+              <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+            </div>
+            <span class="flow-node-label">Merchant<br>(Arua)</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="divider-v"></div>
+
+    <!-- RIGHT -->
+    <section class="panel-right">
+
+      <div class="locked-banner" id="locked-banner">
+        <span class="locked-title">Account Temporarily Locked</span>
+        <span class="locked-sub">Too many incorrect PINs. Try again in 10 minutes or contact support.</span>
+      </div>
+
+      <h2 class="pin-title" id="pin-title">Enter your<br>transaction PIN.</h2>
+      <p class="pin-sub" id="pin-sub">Your 4-digit agent PIN authorises this escrow release. This action cannot be undone.</p>
+
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+
+      <div class="pin-error" id="pin-error"></div>
+      <div class="attempts-row" id="attempts-row" style="display:none">
+        <span id="attempts-num">2</span> attempts remaining
+      </div>
+
+      <!-- Success replaces numpad -->
+      <div class="success-state" id="success-state">
+        <div class="success-check">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="5,13 9,17 19,7"/>
+          </svg>
+        </div>
+        <h3 class="success-title">Payment Released</h3>
+        <p class="success-sub">₦24,869 released from escrow.<br>Arua Studio has been notified.<br>Order CLK-2024-00847 confirmed.</p>
+      </div>
+
+      <!-- Numpad -->
+      <div class="numpad" id="numpad">
+        <button class="numpad-key" onclick="pressKey('1')"><span class="key-digit">1</span></button>
+        <button class="numpad-key" onclick="pressKey('2')"><span class="key-digit">2</span><span class="key-letters">ABC</span></button>
+        <button class="numpad-key" onclick="pressKey('3')"><span class="key-digit">3</span><span class="key-letters">DEF</span></button>
+        <button class="numpad-key" onclick="pressKey('4')"><span class="key-digit">4</span><span class="key-letters">GHI</span></button>
+        <button class="numpad-key" onclick="pressKey('5')"><span class="key-digit">5</span><span class="key-letters">JKL</span></button>
+        <button class="numpad-key" onclick="pressKey('6')"><span class="key-digit">6</span><span class="key-letters">MNO</span></button>
+        <button class="numpad-key" onclick="pressKey('7')"><span class="key-digit">7</span><span class="key-letters">PQRS</span></button>
+        <button class="numpad-key" onclick="pressKey('8')"><span class="key-digit">8</span><span class="key-letters">TUV</span></button>
+        <button class="numpad-key" onclick="pressKey('9')"><span class="key-digit">9</span><span class="key-letters">WXYZ</span></button>
+        <button class="numpad-key key-action" onclick="pressClear()"><span class="key-action-label">Clear</span></button>
+        <button class="numpad-key" onclick="pressKey('0')"><span class="key-digit">0</span></button>
+        <button class="numpad-key key-action" onclick="pressBack()">
+          <svg width="18" height="14" viewBox="0 0 24 18" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 4H8l-7 7 7 7h13a2 2 0 002-2V6a2 2 0 00-2-2z"/>
+            <line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="pin-footer">
+        <p class="forgot-link">Forgot PIN? <a onclick="forgotPin()">Reset via SMS</a></p>
+        <p class="forgot-link"><a onclick="declinePayment()">Decline this payment</a></p>
+      </div>
+
+      <div class="c-badge">
+        <div class="c-badge-dot"></div>
+        <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const CORRECT_PIN  = '1234';
+    const MAX_ATTEMPTS = 3;
+    let pin = '', attempts = MAX_ATTEMPTS, locked = false, processing = false;
+
+    function pressKey(d) {
+      if (locked || processing || pin.length >= 4) return;
+      pin += d;
+      updateDots();
+      triggerRipple(event?.currentTarget);
+      if (pin.length === 4) setTimeout(submitPin, 140);
+    }
+
+    function pressBack() {
+      if (locked || processing) return;
+      pin = pin.slice(0, -1);
+      updateDots();
+    }
+
+    function pressClear() {
+      if (locked || processing) return;
+      pin = '';
+      updateDots();
+      document.getElementById('pin-error').textContent = '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+      else if (e.key === 'Backspace')    pressBack();
+      else if (e.key === 'Escape')       pressClear();
+    });
+
+    function updateDots() {
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById('dot-' + i);
+        d.className = 'pin-dot' + (i < pin.length ? ' filled' : '');
+      }
+    }
+
+    async function submitPin() {
+      if (processing || locked) return;
+      processing = true;
+      document.getElementById('pin-dots').classList.add('loading');
+
+      await new Promise(r => setTimeout(r, 900));
+
+      document.getElementById('pin-dots').classList.remove('loading');
+      processing = false;
+
+      if (pin === CORRECT_PIN) {
+        onSuccess();
+      } else {
+        onFailure();
+      }
+    }
+
+    function onSuccess() {
+      for (let i = 0; i < 4; i++) document.getElementById('dot-' + i).className = 'pin-dot filled';
+
+      setTimeout(() => {
+        ['numpad','pin-title','pin-sub','pin-dots','pin-error','attempts-row'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+        document.querySelector('.pin-footer').style.display = 'none';
+        document.getElementById('success-state').classList.add('show');
+
+        // Animate flow diagram
+        document.getElementById('flow-arrow-2').classList.add('active');
+        document.getElementById('merchant-flow-icon').classList.add('active-node');
+        document.getElementById('order-card').style.borderColor = 'var(--accent)';
+        document.getElementById('balance-new').style.color = 'var(--accent)';
+      }, 500);
+    }
+
+    function onFailure() {
+      attempts--;
+      const dotsEl = document.getElementById('pin-dots');
+      dotsEl.classList.add('shake');
+      for (let i = 0; i < 4; i++) document.getElementById('dot-' + i).className = 'pin-dot error';
+
+      setTimeout(() => {
+        dotsEl.classList.remove('shake');
+        pin = '';
+        updateDots();
+
+        if (attempts <= 0) {
+          locked = true;
+          document.getElementById('locked-banner').classList.add('show');
+          document.getElementById('numpad').style.opacity = '.3';
+          document.getElementById('numpad').style.pointerEvents = 'none';
+          document.getElementById('pin-dots').style.opacity = '.3';
+          document.getElementById('attempts-row').style.display = 'none';
+          document.getElementById('pin-error').textContent = '';
+        } else {
+          document.getElementById('pin-error').textContent = 'Incorrect PIN.';
+          document.getElementById('attempts-row').style.display = 'block';
+          document.getElementById('attempts-num').textContent = attempts;
+        }
+      }, 600);
+    }
+
+    function triggerRipple(el) {
+      if (!el) return;
+      el.classList.remove('ripple');
+      void el.offsetWidth;
+      el.classList.add('ripple');
+      setTimeout(() => el.classList.remove('ripple'), 400);
+    }
+
+    function forgotPin() { alert('A PIN reset SMS has been sent to your registered number.'); }
+
+    function declinePayment() {
+      if (confirm('Decline this payment? The customer will be notified.')) window.history.back();
+    }
+
+    function toggleTheme() {
+      const h = document.documentElement;
+      h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+      syncThemeIcon();
+    }
+
+    function syncThemeIcon() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.getElementById('theme-icon').innerHTML = dark
+        ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+        : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+    }
+
+    syncThemeIcon();
+  </script>
+</body>
+</html>

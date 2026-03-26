@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Merchant Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+[data-theme="dark"]{
+  --bg:#080808;--bg-off:#0F0F0F;--bg-card:#101010;
+  --border:#1C1C1C;--border-md:#2A2A2A;--border-hi:#3A3A3A;
+  --text:#EEECEA;--text-sub:#484844;--text-dim:#252520;
+  --accent:#00E676;--accent-d:#003D1F;--accent-h:#00FF88;
+  --btn-fg:#080808;--red:#FF4040;--red-d:#280A0A;
+  --amber:#F5A200;--amber-d:#281E00;
+  --input-bg:#0C0C0C;--grain:0.028;
+}
+[data-theme="light"]{
+  --bg:#F2F1ED;--bg-off:#EAEAE4;--bg-card:#E6E5E0;
+  --border:#D2D0CA;--border-md:#BCBBB6;--border-hi:#9E9D98;
+  --text:#111110;--text-sub:#888884;--text-dim:#CCCBC6;
+  --accent:#007A38;--accent-d:#D4EDDA;--accent-h:#009444;
+  --btn-fg:#FFFFFF;--red:#CC2020;--red-d:#FDECEA;
+  --amber:#B45309;--amber-d:#FEF3C7;
+  --input-bg:#F7F6F2;--grain:0.010;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--grain);pointer-events:none}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:64px 64px;opacity:.35;pointer-events:none}
+.bg-glow{position:fixed;right:-120px;bottom:-120px;z-index:0;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--accent-d) 0%,transparent 65%);pointer-events:none;animation:gl 9s ease-in-out infinite}
+@keyframes gl{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.9;transform:scale(1.08)}}
+
+/* NAV */
+nav{position:relative;z-index:10;height:56px;padding:0 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.75);backdrop-filter:blur(12px);transition:background .2s,border-color .2s}
+[data-theme="light"] nav{background:rgba(242,241,237,.85)}
+.wordmark{font-weight:800;font-size:17px;letter-spacing:.14em;color:var(--text);text-decoration:none}
+.wordmark span{color:var(--accent)}
+.nav-r{display:flex;align-items:center;gap:12px}
+.nav-link{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em;text-decoration:none;transition:color .15s}
+.nav-link:hover{color:var(--text)}
+.theme-btn{width:32px;height:32px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sub);transition:all .15s}
+.theme-btn:hover{border-color:var(--border-md);color:var(--text);background:var(--bg-off)}
+.theme-btn svg{width:13px;height:13px}
+
+/* LAYOUT */
+.page{flex:1;position:relative;z-index:1;display:grid;grid-template-columns:280px 1fr;max-width:1100px;margin:0 auto;width:100%}
+.sidebar{border-right:1px solid var(--border);padding:48px 32px;display:flex;flex-direction:column;gap:0;position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow-y:auto;transition:border-color .2s}
+.main-form{padding:48px 56px 80px;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.sb-brand{margin-bottom:36px}
+.sb-brand-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sb-brand-tag::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+.sb-brand-h{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.05;margin-bottom:10px}
+.sb-brand-p{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.7}
+.step-list{display:flex;flex-direction:column;gap:1px}
+.step-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid transparent;transition:all .2s;cursor:default}
+.step-item.active{border-color:var(--accent-d);background:var(--accent-d)}
+.step-item.done{background:var(--bg-off);border-color:var(--border)}
+.step-num{width:22px;height:22px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;transition:all .2s}
+.step-item.active .step-num{border-color:var(--accent);color:var(--accent)}
+.step-item.done .step-num{border-color:var(--accent);background:var(--accent);color:var(--btn-fg)}
+.step-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.06em;transition:color .2s}
+.step-item.active .step-label{color:var(--accent)}
+.sb-bottom{margin-top:auto;padding-top:24px;border-top:1px solid var(--border)}
+.sb-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);line-height:1.65;letter-spacing:.04em}
+.sb-note strong{color:var(--text)}
+
+/* STEP SCREENS */
+.screen{display:none;flex-direction:column;animation:fu .3s both}
+.screen.active{display:flex}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.screen-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.screen-tag::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+.screen-title{font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1.05;margin-bottom:8px}
+.screen-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-sub);line-height:1.7;margin-bottom:32px}
+
+/* FORM FIELDS */
+.f-grid{display:grid;gap:18px;margin-bottom:18px}
+.f-grid-2{grid-template-columns:1fr 1fr}
+.f-grid-3{grid-template-columns:1fr 1fr 1fr}
+.frow{display:flex;flex-direction:column;gap:7px}
+.flbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.flbl .opt{color:var(--text-dim)}
+.fwrap{border:1px solid var(--border);background:var(--input-bg);display:flex;align-items:stretch;transition:border-color .15s,background .2s}
+.fwrap:focus-within{border-color:var(--border-hi)}
+.fwrap.e{border-color:var(--red)}
+.fwrap.ok{border-color:var(--accent)}
+.fic{width:40px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);flex-shrink:0;transition:border-color .15s}
+.fic svg{width:12px;height:12px;stroke:var(--text-sub);fill:none;transition:stroke .15s}
+.fwrap:focus-within .fic svg{stroke:var(--text)}
+.fwrap input,.fwrap select,.fwrap textarea{flex:1;background:transparent;border:none;outline:none;padding:12px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);letter-spacing:.04em;transition:color .2s}
+.fwrap input::placeholder,.fwrap textarea::placeholder{color:var(--text-dim)}
+.fwrap select{cursor:pointer;appearance:none}
+.fwrap select option{background:var(--bg-card)}
+.fwrap textarea{resize:vertical;min-height:80px}
+.ferr{font-family:'Space Mono',monospace;font-size:9px;color:var(--red);letter-spacing:.06em;display:none;margin-top:-4px}
+.ferr.show{display:block}
+.fhint{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:.04em;margin-top:-4px}
+.fsep{height:1px;background:var(--border);margin:8px 0 20px}
+.fsec-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fsec-label::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+
+/* URL preview */
+.url-preview{background:var(--bg-off);border:1px solid var(--border);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:10px;transition:border-color .2s}
+.url-preview-prefix{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.04em;white-space:nowrap}
+.url-preview-slug{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.04em}
+.url-preview-empty{color:var(--text-dim)}
+
+/* Checkbox */
+.check-row{display:flex;align-items:flex-start;gap:10px}
+.chbox{width:15px;height:15px;border:1px solid var(--border);background:var(--input-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;margin-top:2px}
+.chbox.on{border-color:var(--accent);background:var(--accent)}
+.chbox svg{width:9px;height:9px;stroke:var(--btn-fg);fill:none;display:none}
+.chbox.on svg{display:block}
+.ch-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.6;letter-spacing:.04em}
+.ch-txt a{color:var(--accent);text-decoration:none}
+
+/* Error banner */
+.err-box{display:none;align-items:flex-start;gap:10px;border:1px solid var(--red);background:var(--red-d);padding:11px 14px;margin-bottom:18px}
+.err-box.show{display:flex}
+.err-icon{width:13px;height:13px;stroke:var(--red);fill:none;flex-shrink:0;margin-top:1px}
+.err-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);line-height:1.65}
+
+/* Info box */
+.info-box{background:var(--accent-d);border:1px solid var(--accent);padding:14px 16px;display:flex;gap:12px;margin-bottom:20px}
+.info-box svg{width:14px;height:14px;stroke:var(--accent);fill:none;flex-shrink:0;margin-top:1px}
+.info-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);line-height:1.65;letter-spacing:.04em}
+.info-txt strong{color:var(--text)}
+
+/* Buttons */
+.btn-row{display:flex;align-items:center;gap:10px;margin-top:32px}
+.sbtn{background:var(--accent);color:var(--btn-fg);border:none;padding:15px 28px;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .15s;position:relative;overflow:hidden}
+.sbtn:hover:not(:disabled){background:var(--accent-h)}
+.sbtn:disabled{opacity:.4;cursor:not-allowed}
+.sbtn.ld::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:sh 1.2s ease-in-out infinite}
+@keyframes sh{0%{left:-60%}100%{left:140%}}
+.bbtn{background:transparent;color:var(--text-sub);border:1px solid var(--border);padding:14px 20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+.bbtn:hover{border-color:var(--border-md);color:var(--text)}
+
+/* SUCCESS */
+.success-icon{width:64px;height:64px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.success-icon svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .4s .3s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.api-block{background:var(--bg-off);border:1px solid var(--border);display:flex;flex-direction:column;gap:1px;background:var(--border);margin-bottom:24px}
+.api-row{background:var(--bg);display:flex;align-items:center}
+.api-key-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);padding:0 14px;border-right:1px solid var(--border);white-space:nowrap;letter-spacing:.08em}
+.api-key-val{flex:1;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);padding:11px 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.api-copy{padding:0 14px;border-left:1px solid var(--border);background:transparent;border-top:none;border-right:none;border-bottom:none;cursor:pointer;color:var(--text-sub);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;height:100%;transition:color .15s;display:flex;align-items:center;gap:6px}
+.api-copy:hover{color:var(--accent)}
+.api-copy svg{width:11px;height:11px;stroke:currentColor;fill:none}
+
+@media(max-width:860px){
+  .page{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main-form{padding:36px 24px 60px}
+  .f-grid-2,.f-grid-3{grid-template-columns:1fr}
+}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav>
+  <a href="/" class="wordmark">CLR<span>K</span></a>
+  <div class="nav-r">
+    <a href="clerk_join.html" class="nav-link">← Choose role</a>
+    <a href="clerk_signin.html" class="nav-link">Sign in</a>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <p class="sb-brand-tag">Merchant Registration</p>
+      <h2 class="sb-brand-h">Start accepting Clerk checkout.</h2>
+      <p class="sb-brand-p">Set up in minutes. One redirect URL is all you need to accept payments from any Clerk customer.</p>
+    </div>
+
+    <div class="step-list" id="step-list">
+      <div class="step-item active" id="si0"><div class="step-num" id="sn0">1</div><span class="step-label">Business details</span></div>
+      <div class="step-item" id="si1"><div class="step-num" id="sn1">2</div><span class="step-label">Contact & address</span></div>
+      <div class="step-item" id="si2"><div class="step-num" id="sn2">3</div><span class="step-label">Bank settlement</span></div>
+      <div class="step-item" id="si3"><div class="step-num" id="sn3">4</div><span class="step-label">Account credentials</span></div>
+      <div class="step-item" id="si4"><div class="step-num" id="sn4">5</div><span class="step-label">Review & submit</span></div>
+    </div>
+
+    <div class="sb-bottom">
+      <p class="sb-note">Clerk charges <strong>1.5% per transaction</strong>, deducted at settlement. No monthly fees, no setup cost. Payouts via Interswitch Payout API to your registered bank account.</p>
+    </div>
+  </aside>
+
+  <!-- MAIN FORM -->
+  <main class="main-form">
+
+    <!-- STEP 0: Business details -->
+    <div class="screen active" id="s0">
+      <p class="screen-tag">Step 1 of 4</p>
+      <h1 class="screen-title">Business details.</h1>
+      <p class="screen-sub">Tell us about your business. This information will appear on your Clerk checkout page.</p>
+
+      <div class="err-box" id="eb0"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et0">Please fill all required fields.</span></div>
+
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Business Name *</label>
+          <div class="fwrap" id="bname-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div><input type="text" id="bname" placeholder="Arua Studio" oninput="updateSlug()" /></div>
+          <span class="ferr" id="bname-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Business Type *</label>
+          <div class="fwrap" id="btype-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <select id="btype"><option value="" disabled selected>Select type...</option><option>E-commerce / Retail</option><option>Fashion & Apparel</option><option>Food & Beverages</option><option>Digital Products</option><option>Electronics</option><option>Health & Beauty</option><option>Books & Education</option><option>Services</option><option>Other</option></select></div>
+          <span class="ferr" id="btype-e">Required</span>
+        </div>
+        <div class="frow" style="grid-column:1/-1">
+          <label class="flbl">Business Description *</label>
+          <div class="fwrap" id="bdesc-w"><textarea id="bdesc" placeholder="Briefly describe what you sell and who your customers are..."></textarea></div>
+          <span class="ferr" id="bdesc-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">RC Number <span class="opt">(optional)</span></label>
+          <div class="fwrap"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><input type="text" id="rc" placeholder="CAC registration number"/></div>
+        </div>
+        <div class="frow">
+          <label class="flbl">Business Category *</label>
+          <div class="fwrap" id="bcat-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="4" height="7"/><rect x="10" y="3" width="4" height="4"/><rect x="18" y="3" width="4" height="4"/><rect x="2" y="14" width="4" height="7"/><rect x="10" y="11" width="4" height="10"/><rect x="18" y="11" width="4" height="10"/></svg></div>
+          <select id="bcat"><option value="" disabled selected>Select...</option><option>B2C (Business to Consumer)</option><option>B2B (Business to Business)</option><option>Marketplace</option><option>Service Provider</option></select></div>
+          <span class="ferr" id="bcat-e">Required</span>
+        </div>
+      </div>
+
+      <div class="fsec-label">Your Clerk Checkout URL</div>
+      <div class="url-preview">
+        <span class="url-preview-prefix">checkout.clerk.ng/</span>
+        <span class="url-preview-slug url-preview-empty" id="slug-preview">your-business-name</span>
+      </div>
+      <div class="frow" style="margin-bottom:18px">
+        <label class="flbl">Custom Slug <span class="opt">(editable)</span></label>
+        <div class="fwrap" id="slug-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+        <input type="text" id="slug" placeholder="arua-studio" oninput="syncSlug(this.value)"/></div>
+        <span class="fhint">Lowercase letters, numbers, hyphens only</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="sbtn" onclick="next(0)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 1: Contact & address -->
+    <div class="screen" id="s1">
+      <p class="screen-tag">Step 2 of 4</p>
+      <h1 class="screen-title">Contact & address.</h1>
+      <p class="screen-sub">How customers and Clerk can reach you, and where your business is located.</p>
+
+      <div class="err-box" id="eb1"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et1">Please fill all required fields.</span></div>
+
+      <div class="fsec-label">Primary Contact</div>
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Full Name *</label>
+          <div class="fwrap" id="cname-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><input type="text" id="cname" placeholder="Funke Adeyemi"/></div>
+          <span class="ferr" id="cname-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Role / Title *</label>
+          <div class="fwrap" id="crole-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+          <select id="crole"><option value="" disabled selected>Select...</option><option>Owner / Founder</option><option>CEO / MD</option><option>Operations Manager</option><option>Finance Manager</option><option>Other</option></select></div>
+          <span class="ferr" id="crole-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Email Address *</label>
+          <div class="fwrap" id="cemail-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><input type="email" id="cemail" placeholder="hello@business.com"/></div>
+          <span class="ferr" id="cemail-e">Enter a valid email.</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Phone Number *</label>
+          <div class="fwrap" id="cphone-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.18 2 2 0 015 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div><input type="tel" id="cphone" placeholder="+234 800 000 0000"/></div>
+          <span class="ferr" id="cphone-e">Enter a valid Nigerian number.</span>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+      <div class="fsec-label">Business Address</div>
+      <div class="f-grid">
+        <div class="frow">
+          <label class="flbl">Street Address *</label>
+          <div class="fwrap" id="addr-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div><input type="text" id="addr" placeholder="12 Bode Thomas Street, Surulere"/></div>
+          <span class="ferr" id="addr-e">Required</span>
+        </div>
+        <div class="f-grid f-grid-2">
+          <div class="frow">
+            <label class="flbl">City *</label>
+            <div class="fwrap" id="city-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><input type="text" id="city" placeholder="Lagos"/></div>
+            <span class="ferr" id="city-e">Required</span>
+          </div>
+          <div class="frow">
+            <label class="flbl">State *</label>
+            <div class="fwrap" id="state-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/></svg></div>
+            <select id="state"><option value="" disabled selected>Select state...</option><option>Lagos</option><option>Abuja (FCT)</option><option>Rivers</option><option>Kano</option><option>Oyo</option><option>Kaduna</option><option>Anambra</option><option>Delta</option><option>Ogun</option><option>Other</option></select></div>
+            <span class="ferr" id="state-e">Required</span>
+          </div>
+        </div>
+        <div class="frow">
+          <label class="flbl">Website <span class="opt">(optional)</span></label>
+          <div class="fwrap"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div><input type="url" id="web" placeholder="https://yourstore.com"/></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(1)">← Back</button>
+        <button class="sbtn" onclick="next(1)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Bank settlement -->
+    <div class="screen" id="s2">
+      <p class="screen-tag">Step 3 of 4</p>
+      <h1 class="screen-title">Bank settlement.</h1>
+      <p class="screen-sub">Where we send your money. Clerk settles directly to your bank account via Interswitch after each approved transaction.</p>
+
+      <div class="info-box">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="info-txt">Clerk deducts a <strong>1.5% settlement fee</strong> before disbursing to your account. Payouts happen automatically after each transaction or on a weekly sweep, whichever comes first.</div>
+      </div>
+
+      <div class="err-box" id="eb2"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et2">Please fill all required fields.</span></div>
+
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Bank Name *</label>
+          <div class="fwrap" id="bank-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12,2 20,7 4,7"/></svg></div>
+          <select id="bank"><option value="" disabled selected>Select bank...</option><option>GTBank (Guaranty Trust Bank)</option><option>Access Bank</option><option>Zenith Bank</option><option>First Bank of Nigeria</option><option>UBA (United Bank for Africa)</option><option>Stanbic IBTC Bank</option><option>Sterling Bank</option><option>Fidelity Bank</option><option>Union Bank</option><option>Wema Bank</option><option>Polaris Bank</option><option>OPay</option><option>PalmPay</option><option>Moniepoint</option><option>Kuda Bank</option><option>Other</option></select></div>
+          <span class="ferr" id="bank-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Account Number *</label>
+          <div class="fwrap" id="acct-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><input type="text" id="acct" placeholder="0000000000" maxlength="10" oninput="this.value=this.value.replace(/\D/,'')"/></div>
+          <span class="ferr" id="acct-e">Enter a valid 10-digit account number.</span>
+        </div>
+        <div class="frow" style="grid-column:1/-1">
+          <label class="flbl">Account Name *</label>
+          <div class="fwrap" id="aname-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><input type="text" id="aname" placeholder="ARUA STUDIO LIMITED"/></div>
+          <span class="ferr" id="aname-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Payout Frequency *</label>
+          <div class="fwrap"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <select id="pfreq"><option value="" disabled selected>Select...</option><option>Instant (after each transaction)</option><option>Daily (end of business day)</option><option>Weekly (every Friday)</option></select></div>
+        </div>
+        <div class="frow">
+          <label class="flbl">Minimum Payout Amount</label>
+          <div class="fwrap"><div class="fic" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-sub);width:40px;justify-content:center">₦</div><input type="number" placeholder="5000" min="1000"/></div>
+          <span class="fhint">Minimum ₦1,000</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(2)">← Back</button>
+        <button class="sbtn" onclick="next(2)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Credentials -->
+    <div class="screen" id="s3">
+      <p class="screen-tag">Step 4 of 4</p>
+      <h1 class="screen-title">Account credentials.</h1>
+      <p class="screen-sub">Create the login credentials for your Clerk merchant dashboard.</p>
+
+      <div class="err-box" id="eb3"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et3">Please fix errors above.</span></div>
+
+      <div class="f-grid">
+        <div class="frow">
+          <label class="flbl">Dashboard Email *</label>
+          <div class="fwrap" id="demail-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><input type="email" id="demail" placeholder="admin@yourbusiness.com" autocomplete="username"/></div>
+          <span class="ferr" id="demail-e">Enter a valid email address.</span>
+        </div>
+        <div class="f-grid f-grid-2">
+          <div class="frow">
+            <label class="flbl">Password *</label>
+            <div class="fwrap" id="dpw-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><input type="password" id="dpw" placeholder="Min. 8 characters" oninput="checkPwStrength()"/></div>
+            <span class="ferr" id="dpw-e">Password must be at least 8 characters.</span>
+          </div>
+          <div class="frow">
+            <label class="flbl">Confirm Password *</label>
+            <div class="fwrap" id="dpw2-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><input type="password" id="dpw2" placeholder="Repeat password" oninput="checkMatch()"/></div>
+            <span class="ferr" id="dpw2-e">Passwords do not match.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+      <div class="fsec-label">Terms & Agreements</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+        <div class="check-row">
+          <div class="chbox" id="terms1" onclick="tog('terms1')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I agree to Clerk's <a href="#">Merchant Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+        </div>
+        <div class="check-row">
+          <div class="chbox" id="terms2" onclick="tog('terms2')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I understand Clerk processes payments via Interswitch and charges a 1.5% settlement fee per transaction.</span>
+        </div>
+        <div class="check-row">
+          <div class="chbox" id="terms3" onclick="tog('terms3')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I confirm the business information provided is accurate and I am authorised to register this business.</span>
+        </div>
+      </div>
+      <span class="ferr" id="terms-e">You must accept all terms to continue.</span>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(3)">← Back</button>
+        <button class="sbtn" id="final-btn" onclick="finalSubmit()">
+          <span id="final-lbl">Create Merchant Account</span>
+          <span style="font-size:16px;font-weight:400" id="final-arr">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Success -->
+    <div class="screen" id="s4">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5,13 9,17 19,7"/></svg>
+      </div>
+      <h2 class="screen-title">You're live on Clerk.</h2>
+      <p class="screen-sub" style="margin-bottom:28px">Your merchant account has been created. Here are your API keys and checkout URL — add them to your store now.</p>
+
+      <div class="api-block">
+        <div class="api-row">
+          <span class="api-key-lbl">pk_live</span>
+          <span class="api-key-val" id="s-pk">pk_live_••••••••••••••••••••••••••••</span>
+          <button class="api-copy" onclick="reveal('s-pk','pk_live_arua_8f3k2mxp91qw')">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Reveal
+          </button>
+        </div>
+        <div class="api-row">
+          <span class="api-key-lbl">sk_live</span>
+          <span class="api-key-val">sk_live_••••••••••••••••••••••••••••••</span>
+          <button class="api-copy" onclick="copyStr('sk_live_arua_9g4l3nyq02rx',this)">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy
+          </button>
+        </div>
+        <div class="api-row">
+          <span class="api-key-lbl">URL</span>
+          <span class="api-key-val" id="s-url">checkout.clerk.ng/arua-studio</span>
+          <button class="api-copy" onclick="copyStr('https://checkout.clerk.ng/arua-studio',this)">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy
+          </button>
+        </div>
+      </div>
+
+      <a href="clerk_dashboard.html" class="sbtn" style="text-decoration:none;display:flex;justify-content:space-between;align-items:center">
+        <span>Go to Merchant Dashboard</span>
+        <span style="font-size:16px;font-weight:400">→</span>
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let step=0;
+
+function updateTracker(){
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('si'+i);
+    const nm=document.getElementById('sn'+i);
+    el.classList.remove('active','done');
+    nm.textContent=i+1;
+    if(i<step){el.classList.add('done');nm.innerHTML='✓';}
+    else if(i===step) el.classList.add('active');
+  }
+}
+
+function goStep(n){
+  document.getElementById('s'+step).classList.remove('active');
+  step=n;
+  document.getElementById('s'+step).classList.add('active');
+  updateTracker();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function next(s){
+  if(s===0 && !v0()) return;
+  if(s===1 && !v1()) return;
+  if(s===2 && !v2()) return;
+  goStep(s+1);
+}
+function back(s){goStep(s-1);}
+
+// Validations
+function req(id,wid,eid){const v=document.getElementById(id).value.trim();const ok=!!v;document.getElementById(wid).classList.toggle('e',!ok);document.getElementById(eid).classList.toggle('show',!ok);return ok;}
+function reqSel(id,wid,eid){const v=document.getElementById(id).value;const ok=!!v;document.getElementById(wid).classList.toggle('e',!ok);document.getElementById(eid).classList.toggle('show',!ok);return ok;}
+
+function v0(){
+  let ok=true;
+  if(!req('bname','bname-w','bname-e')) ok=false;
+  if(!reqSel('btype','btype-w','btype-e')) ok=false;
+  if(!req('bdesc','bdesc-w','bdesc-e')) ok=false;
+  if(!reqSel('bcat','bcat-w','bcat-e')) ok=false;
+  if(!ok){document.getElementById('eb0').classList.add('show');}
+  else document.getElementById('eb0').classList.remove('show');
+  return ok;
+}
+function v1(){
+  let ok=true;
+  if(!req('cname','cname-w','cname-e')) ok=false;
+  if(!reqSel('crole','crole-w','crole-e')) ok=false;
+  const em=document.getElementById('cemail').value;
+  const emOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+  document.getElementById('cemail-w').classList.toggle('e',!emOk);
+  document.getElementById('cemail-e').classList.toggle('show',!emOk);
+  if(!emOk) ok=false;
+  const ph=document.getElementById('cphone').value.replace(/\s/g,'');
+  const phOk=/^(\+234|0)[789][01]\d{8}$/.test(ph);
+  document.getElementById('cphone-w').classList.toggle('e',!phOk);
+  document.getElementById('cphone-e').classList.toggle('show',!phOk);
+  if(!phOk) ok=false;
+  if(!req('addr','addr-w','addr-e')) ok=false;
+  if(!req('city','city-w','city-e')) ok=false;
+  if(!reqSel('state','state-w','state-e')) ok=false;
+  if(!ok) document.getElementById('eb1').classList.add('show');
+  else document.getElementById('eb1').classList.remove('show');
+  return ok;
+}
+function v2(){
+  let ok=true;
+  if(!reqSel('bank','bank-w','bank-e')) ok=false;
+  const acct=document.getElementById('acct').value;
+  const acctOk=/^\d{10}$/.test(acct);
+  document.getElementById('acct-w').classList.toggle('e',!acctOk);
+  document.getElementById('acct-e').classList.toggle('show',!acctOk);
+  if(!acctOk) ok=false;
+  if(!req('aname','aname-w','aname-e')) ok=false;
+  if(!ok) document.getElementById('eb2').classList.add('show');
+  else document.getElementById('eb2').classList.remove('show');
+  return ok;
+}
+
+async function finalSubmit(){
+  document.getElementById('eb3').classList.remove('show');
+  let ok=true;
+  const em=document.getElementById('demail').value;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){document.getElementById('demail-w').classList.add('e');document.getElementById('demail-e').classList.add('show');ok=false;}
+  const pw=document.getElementById('dpw').value;
+  if(pw.length<8){document.getElementById('dpw-w').classList.add('e');document.getElementById('dpw-e').classList.add('show');ok=false;}
+  if(pw!==document.getElementById('dpw2').value){document.getElementById('dpw2-w').classList.add('e');document.getElementById('dpw2-e').classList.add('show');ok=false;}
+  if(!['terms1','terms2','terms3'].every(id=>document.getElementById(id).classList.contains('on'))){document.getElementById('terms-e').classList.add('show');ok=false;}
+  if(!ok){document.getElementById('eb3').classList.add('show');return;}
+  const btn=document.getElementById('final-btn');
+  btn.disabled=true;btn.classList.add('ld');
+  document.getElementById('final-lbl').textContent='Creating account...';
+  document.getElementById('final-arr').textContent='◌';
+  await new Promise(r=>setTimeout(r,2400));
+  // Update success screen
+  const slug=document.getElementById('slug').value||slugify(document.getElementById('bname').value)||'your-store';
+  document.getElementById('s-url').textContent='checkout.clerk.ng/'+slug;
+  goStep(4);
+}
+
+function tog(id){document.getElementById(id).classList.toggle('on');document.getElementById('terms-e').classList.remove('show');}
+
+function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function updateSlug(){const v=document.getElementById('bname').value;const s=slugify(v);document.getElementById('slug').value=s;syncSlug(s);}
+function syncSlug(v){const el=document.getElementById('slug-preview');el.textContent=v||'your-business-name';el.className='url-preview-slug'+(v?'':' url-preview-empty');}
+
+function checkPwStrength(){}
+function checkMatch(){
+  const match=document.getElementById('dpw').value===document.getElementById('dpw2').value;
+  document.getElementById('dpw2-w').classList.toggle('ok',match&&document.getElementById('dpw2').value.length>0);
+  document.getElementById('dpw2-w').classList.toggle('e',!match&&document.getElementById('dpw2').value.length>0);
+}
+
+function reveal(id,val){document.getElementById(id).textContent=val;}
+function copyStr(val,btn){
+  navigator.clipboard.writeText(val).catch(()=>{});
+  const orig=btn.lastChild.textContent;
+  btn.style.color='var(--accent)';
+  btn.lastChild.textContent=' Copied!';
+  setTimeout(()=>{btn.style.color='';btn.lastChild.textContent=orig;},2000);
+}
+
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';si();}
+function si(){const d=document.documentElement.dataset.theme==='dark';document.getElementById('ti').innerHTML=d?`<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`:`<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;}
+si();
+</script>
+</body>
+</html>

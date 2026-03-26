@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Clerk Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+
+/* ═══════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:       #0C0C0C;
+  --bg-off:   #131313;
+  --bg-card:  #161616;
+  --bg-raised:#1C1C1C;
+  --border:   #212121;
+  --border-m: #2C2C2C;
+  --text:     #F2F1EA;
+  --text-2:   #666660;
+  --text-3:   #2A2A28;
+  --accent:   #00E676;
+  --acc-d:    #002E18;
+  --acc-h:    #00FF88;
+  --btn-fg:   #0C0C0C;
+  --red:      #FF4040;
+  --red-d:    #280808;
+  --amber:    #F5A623;
+  --amb-d:    #281800;
+  --grain:    0.03;
+  --shadow:   0 4px 24px rgba(0,0,0,.6);
+}
+[data-theme="light"] {
+  --bg:       #F0EFEA;
+  --bg-off:   #E8E7E2;
+  --bg-card:  #ECEAE4;
+  --bg-raised:#E4E2DC;
+  --border:   #D2D0CA;
+  --border-m: #BBBAB4;
+  --text:     #111110;
+  --text-2:   #888884;
+  --text-3:   #CCCCC8;
+  --accent:   #007A38;
+  --acc-d:    #D4EDDA;
+  --acc-h:    #009444;
+  --btn-fg:   #FFFFFF;
+  --red:      #CC2222;
+  --red-d:    #FDECEA;
+  --amber:    #B45309;
+  --amb-d:    #FEF3C7;
+  --grain:    0.01;
+  --shadow:   0 4px 24px rgba(0,0,0,.12);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100%;min-height:100dvh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:background .2s,color .2s;
+  max-width:480px;margin:0 auto;
+  position:relative;
+}
+
+/* grain */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+
+.mono{font-family:'Space Mono',monospace}
+
+/* ═══════════════════════════════════════════════════
+   STATUS BAR SIMULATION
+═══════════════════════════════════════════════════ */
+.status-bar{
+  height:44px;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.sb-time{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.04em}
+.sb-icons{display:flex;align-items:center;gap:6px}
+.sb-icons svg{width:14px;height:14px;fill:var(--text)}
+
+/* ═══════════════════════════════════════════════════
+   TOP NAV
+═══════════════════════════════════════════════════ */
+.topnav{
+  padding:0 20px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.agent-identity{display:flex;flex-direction:column;gap:2px}
+.agent-greeting{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-2);letter-spacing:.1em;text-transform:uppercase}
+.agent-name{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.topnav-right{display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:36px;height:36px;border:1px solid var(--border);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);transition:all .15s;
+  position:relative;
+}
+.icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none}
+.icon-btn.notif::after{
+  content:'';position:absolute;top:6px;right:6px;
+  width:7px;height:7px;background:var(--accent);
+  border-radius:50%;border:2px solid var(--bg);
+}
+.theme-btn{width:36px;height:36px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.theme-btn svg{width:14px;height:14px;stroke:currentColor;fill:none}
+
+/* ═══════════════════════════════════════════════════
+   BALANCE STRIP
+═══════════════════════════════════════════════════ */
+.balance-strip{
+  margin:0 20px 20px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  padding:18px 20px;
+  display:grid;grid-template-columns:1fr 1px 1fr;
+}
+.bal-divider{background:var(--border)}
+.bal-item{display:flex;flex-direction:column;gap:4px}
+.bal-item:last-child{padding-left:20px}
+.bal-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);letter-spacing:.1em;text-transform:uppercase}
+.bal-val{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1}
+.bal-val .acc{color:var(--accent)}
+.bal-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2)}
+
+/* ═══════════════════════════════════════════════════
+   SCROLLABLE CONTENT
+═══════════════════════════════════════════════════ */
+.scroll-body{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:80px;
+}
+.scroll-body::-webkit-scrollbar{display:none}
+
+/* ═══════════════════════════════════════════════════
+   SECTION
+═══════════════════════════════════════════════════ */
+.section{padding:0 20px;margin-bottom:24px}
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.section-title{font-size:13px;font-weight:800;letter-spacing:.01em}
+.section-action{
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--accent);letter-spacing:.08em;
+  background:none;border:none;cursor:pointer;padding:0;
+}
+
+/* ═══════════════════════════════════════════════════
+   PENDING CARDS (BIG - swipeable feel)
+═══════════════════════════════════════════════════ */
+.pending-list{display:flex;flex-direction:column;gap:8px}
+
+.pending-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  overflow:hidden;
+  transition:border-color .2s,transform .15s;
+  position:relative;
+}
+
+.pending-card.urgent{border-color:var(--amber)}
+.pending-card.urgent .pc-urgency{display:flex}
+
+.pc-urgency{
+  display:none;
+  background:var(--amber);
+  padding:4px 12px;
+  align-items:center;gap:6px;
+}
+.pc-urgency-text{
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--btn-fg);letter-spacing:.08em;font-weight:700;
+}
+
+.pc-top{padding:14px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.pc-merchant{display:flex;flex-direction:column;gap:3px}
+.pc-merchant-name{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.pc-order-id{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.06em}
+.pc-amount{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text);text-align:right}
+.pc-amount-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);text-align:right}
+
+.pc-meta{padding:10px 16px;display:flex;gap:16px;border-top:1px solid var(--border);margin-top:12px}
+.pc-meta-item{display:flex;flex-direction:column;gap:2px}
+.pc-meta-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase}
+.pc-meta-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--text)}
+
+.pc-actions{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)}
+.pc-btn{
+  padding:14px;border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.pc-btn-approve{background:var(--acc-d);color:var(--accent)}
+.pc-btn-approve:active{background:var(--accent);color:var(--btn-fg)}
+.pc-btn-reject{background:var(--red-d);color:var(--red)}
+.pc-btn-reject:active{background:var(--red);color:#fff}
+.pc-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;flex-shrink:0}
+
+/* card leaving animation */
+@keyframes card-approve{
+  to{transform:translateX(110%);opacity:0}
+}
+@keyframes card-reject{
+  to{transform:translateX(-110%);opacity:0}
+}
+.card-leaving-approve{animation:card-approve .35s cubic-bezier(.4,0,1,1) forwards}
+.card-leaving-reject{animation:card-reject .35s cubic-bezier(.4,0,1,1) forwards}
+
+/* empty state */
+.pending-empty{
+  border:1px solid var(--border);padding:40px 20px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:var(--bg-card);
+}
+.pending-empty svg{width:36px;height:36px;stroke:var(--text-3);fill:none}
+.pending-empty p{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-2);text-align:center;line-height:1.6}
+
+/* ═══════════════════════════════════════════════════
+   ORDER ID LOOKUP
+═══════════════════════════════════════════════════ */
+.lookup-box{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  overflow:hidden;
+}
+.lookup-input-row{
+  display:flex;align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.lookup-input-row svg{
+  width:14px;height:14px;stroke:var(--text-2);fill:none;
+  margin-left:14px;flex-shrink:0;
+}
+.lookup-input-row input{
+  flex:1;background:transparent;border:none;outline:none;
+  padding:14px 12px;
+  font-family:'Space Mono',monospace;font-size:12px;
+  color:var(--text);letter-spacing:.04em;
+}
+.lookup-input-row input::placeholder{color:var(--text-3)}
+.lookup-go-btn{
+  padding:0 16px;height:100%;
+  background:var(--acc-d);border:none;border-left:1px solid var(--border);
+  color:var(--accent);font-family:'Space Mono',monospace;
+  font-size:10px;letter-spacing:.1em;cursor:pointer;
+  transition:background .15s;white-space:nowrap;
+}
+.lookup-go-btn:active{background:var(--accent);color:var(--btn-fg)}
+
+/* Lookup result */
+.lookup-result{
+  padding:16px;display:none;flex-direction:column;gap:14px;
+  animation:fade-up .25s both;
+}
+.lookup-result.show{display:flex}
+@keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.lr-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.lr-row:last-of-type{border-bottom:none}
+.lr-key{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase}
+.lr-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--text);text-align:right}
+.lr-val.accent{color:var(--accent);font-size:15px;font-weight:700}
+.lr-val.green{color:var(--accent)}
+.lr-val.amber{color:var(--amber)}
+.lr-val.red{color:var(--red)}
+
+.lr-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lr-btn{
+  padding:13px;border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .15s;
+}
+.lr-btn-approve{background:var(--accent);color:var(--btn-fg)}
+.lr-btn-approve:active{background:var(--acc-h)}
+.lr-btn-reject{background:var(--bg-raised);color:var(--text-2);border:1px solid var(--border)}
+.lr-btn-reject:active{background:var(--red-d);color:var(--red);border-color:var(--red)}
+.lr-btn svg{width:13px;height:13px;stroke:currentColor;fill:none}
+
+.lookup-error{
+  padding:14px 16px;
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--red);
+  background:var(--red-d);display:none;
+  border-top:1px solid var(--red);
+}
+.lookup-error.show{display:block}
+
+/* ═══════════════════════════════════════════════════
+   CUSTOMER LIST
+═══════════════════════════════════════════════════ */
+.customer-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.customer-row{
+  background:var(--bg-card);padding:12px 16px;
+  display:flex;align-items:center;gap:12px;
+  transition:background .15s;cursor:pointer;
+}
+.customer-row:active{background:var(--bg-raised)}
+.cust-avatar{
+  width:36px;height:36px;
+  background:var(--bg-raised);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--text-2);flex-shrink:0;letter-spacing:.04em;
+}
+.cust-info{flex:1;min-width:0}
+.cust-name{font-size:13px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cust-ref{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);letter-spacing:.06em;margin-top:2px}
+.cust-right{text-align:right;flex-shrink:0}
+.cust-balance{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text)}
+.cust-activity{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);margin-top:2px}
+
+/* ═══════════════════════════════════════════════════
+   HISTORY LIST
+═══════════════════════════════════════════════════ */
+.history-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.history-row{
+  background:var(--bg-card);padding:12px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-dot.green{background:var(--accent)}
+.hist-dot.red{background:var(--red)}
+.hist-dot.amber{background:var(--amber)}
+.hist-body{flex:1}
+.hist-merchant{font-family:'Space Mono',monospace;font-size:11px;color:var(--text);font-weight:700}
+.hist-id{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);margin-top:2px;letter-spacing:.04em}
+.hist-right{text-align:right}
+.hist-amount{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.hist-amount.green{color:var(--accent)}
+.hist-amount.red{color:var(--red)}
+.hist-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);margin-top:2px}
+
+/* ═══════════════════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════════════════ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  max-width:480px;margin:0 auto;
+  background:var(--bg-card);
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(4,1fr);
+  z-index:100;
+  transition:background .2s,border-color .2s;
+}
+.bn-item{
+  padding:10px 0 14px;display:flex;flex-direction:column;
+  align-items:center;gap:4px;cursor:pointer;
+  border:none;background:transparent;
+  transition:all .15s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-item svg{width:20px;height:20px;stroke:var(--text-2);fill:none;transition:stroke .15s}
+.bn-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase;transition:color .15s}
+.bn-item.active svg{stroke:var(--accent)}
+.bn-item.active .bn-label{color:var(--accent)}
+.bn-badge{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  min-width:16px;height:16px;padding:0 4px;
+  background:var(--accent);color:var(--btn-fg);
+  border-radius:8px;border:2px solid var(--bg-card);
+  font-family:'Space Mono',monospace;font-size:8px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ═══════════════════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════════════════ */
+.view{display:none}
+.view.active{display:block;animation:fade-up .2s both}
+
+/* ═══════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:500;display:none;align-items:flex-end;
+  backdrop-filter:blur(4px);
+  max-width:480px;margin:0 auto;
+}
+.modal-overlay.open{display:flex}
+
+.sheet{
+  background:var(--bg-card);
+  border:1px solid var(--border-m);
+  border-bottom:none;
+  width:100%;padding-bottom:env(safe-area-inset-bottom,20px);
+  animation:sheet-up .3s cubic-bezier(.16,1,.3,1) both;
+  max-height:85dvh;display:flex;flex-direction:column;
+}
+@keyframes sheet-up{from{transform:translateY(100%)}to{transform:none}}
+
+.sheet-handle{width:36px;height:4px;background:var(--border-m);border-radius:2px;margin:12px auto 4px}
+.sheet-header{padding:12px 20px 16px;border-bottom:1px solid var(--border)}
+.sheet-title{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.sheet-subtitle{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-2);margin-top:3px;letter-spacing:.04em}
+.sheet-body{padding:20px;overflow-y:auto;flex:1}
+.sheet-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+
+/* Approve sheet */
+.approve-amount{
+  text-align:center;padding:24px 0;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.approve-amount-num{font-size:40px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+.approve-amount-num .acc{color:var(--accent)}
+.approve-amount-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-2);letter-spacing:.1em;text-transform:uppercase}
+
+.confirm-rows{display:flex;flex-direction:column;gap:0;border:1px solid var(--border)}
+.confirm-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+.confirm-row:last-child{border-bottom:none}
+.cr-key{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase}
+.cr-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--text)}
+.cr-val.accent{color:var(--accent);font-weight:700}
+
+/* Big action buttons */
+.big-approve-btn{
+  width:100%;padding:18px;
+  background:var(--accent);color:var(--btn-fg);
+  border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.big-approve-btn:active{background:var(--acc-h)}
+.big-approve-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
+
+.big-reject-btn{
+  width:100%;padding:14px;
+  background:transparent;color:var(--text-2);
+  border:1px solid var(--border);cursor:pointer;
+  font-family:'Space Mono',monospace;
+  font-size:11px;letter-spacing:.08em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;
+}
+.big-reject-btn:active{background:var(--red-d);color:var(--red);border-color:var(--red)}
+
+/* Success flash */
+.success-sheet{text-align:center;padding:32px 20px}
+.success-icon{
+  width:64px;height:64px;border:2px solid var(--accent);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+}
+.success-icon svg{
+  width:28px;height:28px;stroke:var(--accent);fill:none;
+  stroke-dasharray:40;stroke-dashoffset:40;
+  animation:draw 0.4s .2s ease-out forwards;
+}
+@keyframes draw{to{stroke-dashoffset:0}}
+.success-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.success-amount{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.success-merchant{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2);margin-top:4px}
+.success-id{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-2);margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Reject confirm */
+.reject-warning{
+  background:var(--red-d);border:1px solid var(--red);
+  padding:14px 16px;margin-bottom:16px;
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--red);line-height:1.65;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+.toast{
+  position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:var(--bg-raised);border:1px solid var(--border-m);
+  padding:10px 18px;
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--text);letter-spacing:.06em;
+  z-index:600;white-space:nowrap;
+  opacity:0;transition:opacity .2s;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:var(--shadow);
+}
+.toast.show{opacity:1}
+.toast-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════
+   EARNINGS CARD
+═══════════════════════════════════════════════════ */
+.earnings-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:18px 20px;margin-bottom:20px;
+}
+.ec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ec-title{font-size:13px;font-weight:800;letter-spacing:.01em}
+.ec-period{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-2);letter-spacing:.08em;border:1px solid var(--border);padding:3px 8px}
+.ec-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+.ec-cell{background:var(--bg);padding:14px;display:flex;flex-direction:column;gap:4px}
+.ec-cell-num{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.ec-cell-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text-2);letter-spacing:.08em;text-transform:uppercase}
+
+  </style>
+</head>
+<body>
+
+<!-- ── TOAST ───────────────────────────────────────── -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-text"></span></div>
+
+<!-- ── STATUS BAR ─────────────────────────────────── -->
+<div class="status-bar">
+  <span class="sb-time" id="clock">9:41</span>
+  <div class="sb-icons">
+    <!-- signal -->
+    <svg viewBox="0 0 24 24"><rect x="2" y="15" width="3" height="6"/><rect x="8" y="10" width="3" height="11"/><rect x="14" y="5" width="3" height="16"/><rect x="20" y="1" width="3" height="20" opacity=".3"/></svg>
+    <!-- wifi -->
+    <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0" opacity=".3"/><path d="M1.42 9a16 16 0 0121.16 0" opacity=".15"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+    <!-- battery -->
+    <svg viewBox="0 0 24 24"><rect x="1" y="7" width="18" height="10" rx="1"/><path d="M23 11v2" stroke-linecap="round" stroke-width="2"/><rect x="2" y="8" width="13" height="8" fill="currentColor" opacity=".9"/></svg>
+  </div>
+</div>
+
+<!-- ── TOP NAV ─────────────────────────────────────── -->
+<div class="topnav">
+  <div class="agent-identity">
+    <span class="agent-greeting">Good morning</span>
+    <span class="agent-name">Emeka Obi</span>
+  </div>
+  <div class="topnav-right">
+    <button class="icon-btn notif" onclick="showToast('3 new payment requests')">
+      <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    </button>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ── BALANCE STRIP ──────────────────────────────── -->
+<div class="balance-strip">
+  <div class="bal-item">
+    <span class="bal-label">Escrow Held</span>
+    <span class="bal-val"><span class="acc">₦</span>142K</span>
+    <span class="bal-sub">9 customers</span>
+  </div>
+  <div class="bal-divider"></div>
+  <div class="bal-item">
+    <span class="bal-label">Earnings (Dec)</span>
+    <span class="bal-val">₦4,820</span>
+    <span class="bal-sub">custody fees</span>
+  </div>
+</div>
+
+<!-- ── SCROLL BODY ────────────────────────────────── -->
+<div class="scroll-body">
+
+  <!-- ═══ VIEW: APPROVALS ═══ -->
+  <div class="view active" id="view-approvals">
+
+    <!-- Pending approvals -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Pending Approvals</span>
+        <span class="mono" style="font-size:9px;color:var(--accent);letter-spacing:.08em" id="pending-count">3 waiting</span>
+      </div>
+      <div class="pending-list" id="pending-list"></div>
+    </div>
+
+    <!-- Order ID lookup -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Look Up Order ID</span>
+      </div>
+      <div class="lookup-box">
+        <div class="lookup-input-row">
+          <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="text"
+            id="lookup-input"
+            placeholder="Enter order ID (e.g. CLK-2024-00847)"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            onkeydown="if(event.key==='Enter')lookupOrder()"
+          />
+          <button class="lookup-go-btn" onclick="lookupOrder()">LOOK UP</button>
+        </div>
+        <div class="lookup-error" id="lookup-error">Order ID not found. Check the ID and try again.</div>
+        <div class="lookup-result" id="lookup-result">
+          <div class="lr-row"><span class="lr-key">Order ID</span><span class="lr-val accent" id="lr-id">—</span></div>
+          <div class="lr-row"><span class="lr-key">Merchant</span><span class="lr-val" id="lr-merchant">—</span></div>
+          <div class="lr-row"><span class="lr-key">Item</span><span class="lr-val" id="lr-item">—</span></div>
+          <div class="lr-row"><span class="lr-key">Customer Ref</span><span class="lr-val" id="lr-customer">—</span></div>
+          <div class="lr-row"><span class="lr-key">Amount</span><span class="lr-val accent" id="lr-amount">—</span></div>
+          <div class="lr-row"><span class="lr-key">Status</span><span class="lr-val" id="lr-status">—</span></div>
+          <div class="lr-actions">
+            <button class="lr-btn lr-btn-approve" id="lr-approve-btn" onclick="openApproveSheet(null, true)">
+              <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+              Approve
+            </button>
+            <button class="lr-btn lr-btn-reject" onclick="openRejectSheet(null, true)">
+              <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ VIEW: CUSTOMERS ═══ -->
+  <div class="view" id="view-customers">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">My Customers</span>
+        <button class="section-action" onclick="showToast('Customer registration — coming soon')">+ Register</button>
+      </div>
+      <div class="customer-list" id="customer-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ VIEW: HISTORY ═══ -->
+  <div class="view" id="view-history">
+    <div class="section">
+      <span class="section-title" style="display:block;margin-bottom:16px">This Month</span>
+      <div class="earnings-card">
+        <div class="ec-header">
+          <span class="ec-title">Earnings Breakdown</span>
+          <span class="ec-period">DEC 2024</span>
+        </div>
+        <div class="ec-grid">
+          <div class="ec-cell"><span class="ec-cell-num" style="color:var(--accent)">₦4,820</span><span class="ec-cell-label">Total earned</span></div>
+          <div class="ec-cell"><span class="ec-cell-num">47</span><span class="ec-cell-label">Approvals</span></div>
+          <div class="ec-cell"><span class="ec-cell-num">2</span><span class="ec-cell-label">Rejected</span></div>
+        </div>
+      </div>
+      <div class="section-header" style="margin-bottom:12px">
+        <span class="section-title" style="font-size:12px">Transaction History</span>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── BOTTOM NAV ─────────────────────────────────── -->
+<nav class="bottom-nav">
+  <button class="bn-item active" onclick="switchView('approvals',this)">
+    <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span class="bn-label">Approvals</span>
+    <span class="bn-badge" id="approvals-badge">3</span>
+  </button>
+  <button class="bn-item" onclick="switchView('customers',this)">
+    <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span class="bn-label">Customers</span>
+  </button>
+  <button class="bn-item" onclick="switchView('history',this)">
+    <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+    <span class="bn-label">History</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     APPROVE SHEET
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="approve-modal" onclick="closeApproveSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Confirm Payment</div>
+      <div class="sheet-subtitle" id="approve-subtitle">Review before approving</div>
+    </div>
+    <div class="sheet-body">
+      <div class="approve-amount">
+        <span class="approve-amount-label">Amount to Release</span>
+        <span class="approve-amount-num"><span class="acc">₦</span><span id="approve-amount-num">0</span></span>
+      </div>
+      <div class="confirm-rows">
+        <div class="confirm-row"><span class="cr-key">Order ID</span><span class="cr-val accent" id="conf-id">—</span></div>
+        <div class="confirm-row"><span class="cr-key">Merchant</span><span class="cr-val" id="conf-merchant">—</span></div>
+        <div class="confirm-row"><span class="cr-key">Item</span><span class="cr-val" id="conf-item">—</span></div>
+        <div class="confirm-row"><span class="cr-key">Customer</span><span class="cr-val" id="conf-customer">—</span></div>
+        <div class="confirm-row" style="background:var(--acc-d)"><span class="cr-key" style="color:var(--text)">Balance After</span><span class="cr-val accent" id="conf-balance-after">—</span></div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="big-approve-btn" id="big-approve-btn" onclick="executeApprove()">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+        Approve Payment
+      </button>
+      <button class="big-reject-btn" onclick="closeApproveSheet()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     REJECT SHEET
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="reject-modal" onclick="closeRejectSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" style="color:var(--red)">Reject Payment?</div>
+      <div class="sheet-subtitle" id="reject-subtitle">This action cannot be undone</div>
+    </div>
+    <div class="sheet-body">
+      <div class="reject-warning">
+        Rejecting will cancel this order. The customer's escrow balance will not be deducted. The merchant will be notified.
+      </div>
+      <div class="confirm-rows">
+        <div class="confirm-row"><span class="cr-key">Order ID</span><span class="cr-val" id="rej-id">—</span></div>
+        <div class="confirm-row"><span class="cr-key">Merchant</span><span class="cr-val" id="rej-merchant">—</span></div>
+        <div class="confirm-row"><span class="cr-key">Amount</span><span class="cr-val" id="rej-amount">—</span></div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="big-reject-btn" style="background:var(--red-d);color:var(--red);border-color:var(--red)" onclick="executeReject()">
+        Reject This Payment
+      </button>
+      <button class="big-reject-btn" onclick="closeRejectSheet()">Keep Pending</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SUCCESS SHEET
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="success-modal" onclick="closeSuccessSheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-body">
+      <div class="success-sheet">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+        </div>
+        <div class="success-label">Payment Approved</div>
+        <div class="success-amount" id="succ-amount">₦0</div>
+        <div class="success-merchant" id="succ-merchant">Merchant</div>
+        <div class="success-id" id="succ-id">Order ID</div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="big-approve-btn" onclick="closeSuccessSheet()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const PENDING = [
+  { id:'CLK-2024-00851', merchant:'Arua Studio', item:'Structured Canvas Tote', customer:'Aisha Bello', customerRef:'USR-4821', amount:24869, balanceBefore:42000, urgent:false },
+  { id:'CLK-2024-00852', merchant:'Konga Foods', item:'Jollof Rice Meal Plan × 3', customer:'Tunde Adeyemi', customerRef:'USR-3302', amount:8700, balanceBefore:15000, urgent:true },
+  { id:'CLK-2024-00853', merchant:'TechVault NG', item:'Podcast Microphone', customer:'Chidi Nwosu', customerRef:'USR-7741', amount:34500, balanceBefore:55000, urgent:false },
+];
+
+const CUSTOMERS = [
+  { initials:'AB', name:'Aisha Bello',    ref:'USR-4821', balance:17131, lastActivity:'Today' },
+  { initials:'TA', name:'Tunde Adeyemi', ref:'USR-3302', balance:6300,  lastActivity:'Today' },
+  { initials:'CN', name:'Chidi Nwosu',   ref:'USR-7741', balance:20500, lastActivity:'Yesterday' },
+  { initials:'NO', name:'Ngozi Okeke',   ref:'USR-1183', balance:9800,  lastActivity:'Dec 17' },
+  { initials:'FM', name:'Femi Martins',  ref:'USR-5502', balance:28000, lastActivity:'Dec 15' },
+  { initials:'ZL', name:'Zainab Lawal',  ref:'USR-6690', balance:12400, lastActivity:'Dec 14' },
+  { initials:'EO', name:'Emeka Obi Jr.', ref:'USR-2244', balance:5000,  lastActivity:'Dec 12' },
+  { initials:'BB', name:'Bisi Bankole',  ref:'USR-8810', balance:32000, lastActivity:'Dec 10' },
+  { initials:'KA', name:'Kemi Adeyemi',  ref:'USR-9901', balance:7500,  lastActivity:'Dec 9' },
+];
+
+const HISTORY = [
+  { id:'CLK-2024-00850', merchant:'UrbanWear Lagos',  amount:15000, status:'approved', time:'Today 14:22' },
+  { id:'CLK-2024-00849', merchant:'Konga Foods',      amount:8700,  status:'approved', time:'Today 11:05' },
+  { id:'CLK-2024-00848', merchant:'TechVault NG',     amount:34500, status:'rejected', time:'Yesterday 22:11' },
+  { id:'CLK-2024-00847', merchant:'Arua Studio',      amount:24869, status:'approved', time:'Yesterday 18:34' },
+  { id:'CLK-2024-00846', merchant:'ReadHouse NG',     amount:4500,  status:'approved', time:'Dec 17 15:20' },
+  { id:'CLK-2024-00845', merchant:'Arua Studio',      amount:6500,  status:'approved', time:'Dec 17 10:02' },
+];
+
+// Known order IDs for lookup
+const KNOWN_ORDERS = {
+  'CLK-2024-00847': { merchant:'Arua Studio', item:'Structured Canvas Tote', customer:'USR-4821', amount:24869, status:'settled' },
+  'CLK-2024-00848': { merchant:'TechVault NG', item:'Podcast Microphone', customer:'USR-7741', amount:34500, status:'pending' },
+  'CLK-2024-00851': { merchant:'Arua Studio', item:'Structured Canvas Tote', customer:'USR-4821', amount:24869, status:'pending' },
+  'CLK-2024-00852': { merchant:'Konga Foods', item:'Jollof Rice Meal Plan × 3', customer:'USR-3302', amount:8700, status:'pending' },
+  'CLK-2024-00853': { merchant:'TechVault NG', item:'Podcast Microphone', customer:'USR-7741', amount:34500, status:'pending' },
+};
+
+let pendingData = [...PENDING];
+let activeOrder  = null;
+let lookupOrder_data = null;
+
+// ═══════════════════════════════════════════════
+// RENDER PENDING
+// ═══════════════════════════════════════════════
+function renderPending() {
+  const list = document.getElementById('pending-list');
+  document.getElementById('pending-count').textContent = pendingData.length
+    ? `${pendingData.length} waiting` : 'all clear';
+  document.getElementById('approvals-badge').textContent = pendingData.length;
+  document.getElementById('approvals-badge').style.display = pendingData.length ? 'flex' : 'none';
+
+  if (!pendingData.length) {
+    list.innerHTML = `
+      <div class="pending-empty">
+        <svg viewBox="0 0 24 24" stroke-width="1" stroke-linecap="round">
+          <polyline points="9,11 12,14 22,4"/>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+        <p>All caught up.<br/>No pending approvals right now.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = pendingData.map(o => `
+    <div class="pending-card ${o.urgent?'urgent':''}" id="card-${o.id}">
+      ${o.urgent ? `<div class="pc-urgency"><span class="pc-urgency-text">⚠ EXPIRES SOON</span></div>` : ''}
+      <div class="pc-top">
+        <div class="pc-merchant">
+          <span class="pc-merchant-name">${o.merchant}</span>
+          <span class="pc-order-id">${o.id}</span>
+        </div>
+        <div>
+          <div class="pc-amount-label">AMOUNT</div>
+          <div class="pc-amount">₦${o.amount.toLocaleString('en-NG')}</div>
+        </div>
+      </div>
+      <div class="pc-meta">
+        <div class="pc-meta-item">
+          <span class="pc-meta-label">ITEM</span>
+          <span class="pc-meta-val">${o.item}</span>
+        </div>
+        <div class="pc-meta-item">
+          <span class="pc-meta-label">CUSTOMER</span>
+          <span class="pc-meta-val">${o.customer}</span>
+        </div>
+      </div>
+      <div class="pc-actions">
+        <button class="pc-btn pc-btn-approve" onclick="openApproveSheet('${o.id}')">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+          Approve
+        </button>
+        <button class="pc-btn pc-btn-reject" onclick="openRejectSheet('${o.id}')">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Reject
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RENDER CUSTOMERS
+// ═══════════════════════════════════════════════
+function renderCustomers() {
+  const list = document.getElementById('customer-list');
+  list.innerHTML = CUSTOMERS.map(c => `
+    <div class="customer-row" onclick="showToast('${c.name} — balance ₦${c.balance.toLocaleString()}')">
+      <div class="cust-avatar">${c.initials}</div>
+      <div class="cust-info">
+        <div class="cust-name">${c.name}</div>
+        <div class="cust-ref">${c.ref}</div>
+      </div>
+      <div class="cust-right">
+        <div class="cust-balance">₦${c.balance.toLocaleString('en-NG')}</div>
+        <div class="cust-activity">${c.lastActivity}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RENDER HISTORY
+// ═══════════════════════════════════════════════
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = HISTORY.map(h => {
+    const isApproved = h.status === 'approved';
+    return `
+      <div class="history-row">
+        <div class="hist-dot ${isApproved?'green':'red'}"></div>
+        <div class="hist-body">
+          <div class="hist-merchant">${h.merchant}</div>
+          <div class="hist-id">${h.id}</div>
+        </div>
+        <div class="hist-right">
+          <div class="hist-amount ${isApproved?'green':'red'}">${isApproved?'':'-'}₦${h.amount.toLocaleString('en-NG')}</div>
+          <div class="hist-time">${h.time}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// ORDER LOOKUP
+// ═══════════════════════════════════════════════
+function lookupOrder() {
+  const input = document.getElementById('lookup-input').value.trim().toUpperCase();
+  const errorEl  = document.getElementById('lookup-error');
+  const resultEl = document.getElementById('lookup-result');
+
+  errorEl.classList.remove('show');
+  resultEl.classList.remove('show');
+
+  if (!input) return;
+
+  const order = KNOWN_ORDERS[input];
+  if (!order) {
+    errorEl.classList.add('show');
+    return;
+  }
+
+  lookupOrder_data = { ...order, id: input };
+  const statusColor = order.status === 'settled' ? 'green' : order.status === 'pending' ? 'amber' : 'red';
+
+  document.getElementById('lr-id').textContent       = input;
+  document.getElementById('lr-merchant').textContent  = order.merchant;
+  document.getElementById('lr-item').textContent      = order.item;
+  document.getElementById('lr-customer').textContent  = order.customer;
+  document.getElementById('lr-amount').textContent    = '₦' + order.amount.toLocaleString('en-NG');
+  document.getElementById('lr-status').textContent    = order.status.toUpperCase();
+  document.getElementById('lr-status').className      = `lr-val ${statusColor}`;
+
+  const approveBtn = document.getElementById('lr-approve-btn');
+  approveBtn.disabled = order.status === 'settled';
+  approveBtn.style.opacity = order.status === 'settled' ? '0.4' : '1';
+
+  resultEl.classList.add('show');
+}
+
+// ═══════════════════════════════════════════════
+// APPROVE SHEET
+// ═══════════════════════════════════════════════
+function openApproveSheet(orderId, fromLookup = false) {
+  let order;
+  if (fromLookup && lookupOrder_data) {
+    order = { ...lookupOrder_data, balanceBefore: 35000 };
+    order.customer = 'USR-xxxx';
+  } else {
+    order = pendingData.find(o => o.id === orderId);
+  }
+  if (!order) return;
+  activeOrder = { ...order, fromLookup };
+
+  document.getElementById('approve-subtitle').textContent = order.id;
+  document.getElementById('approve-amount-num').textContent = order.amount.toLocaleString('en-NG');
+  document.getElementById('conf-id').textContent       = order.id;
+  document.getElementById('conf-merchant').textContent  = order.merchant;
+  document.getElementById('conf-item').textContent      = order.item || order.item;
+  document.getElementById('conf-customer').textContent  = order.customer || order.customerRef || '—';
+  const after = (order.balanceBefore || 0) - order.amount;
+  document.getElementById('conf-balance-after').textContent = '₦' + Math.max(after,0).toLocaleString('en-NG');
+
+  document.getElementById('approve-modal').classList.add('open');
+}
+
+function closeApproveSheet(e) {
+  if (e && e.target !== document.getElementById('approve-modal')) return;
+  document.getElementById('approve-modal').classList.remove('open');
+  activeOrder = null;
+}
+
+async function executeApprove() {
+  if (!activeOrder) return;
+  const btn = document.getElementById('big-approve-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg> Processing...';
+
+  await new Promise(r => setTimeout(r, 1200));
+
+  // Remove from pending
+  if (!activeOrder.fromLookup) {
+    const card = document.getElementById('card-' + activeOrder.id);
+    if (card) {
+      card.classList.add('card-leaving-approve');
+      await new Promise(r => setTimeout(r, 350));
+    }
+    pendingData = pendingData.filter(o => o.id !== activeOrder.id);
+    renderPending();
+  }
+
+  // Add to history
+  HISTORY.unshift({ id: activeOrder.id, merchant: activeOrder.merchant, amount: activeOrder.amount, status:'approved', time:'Just now' });
+  renderHistory();
+
+  document.getElementById('approve-modal').classList.remove('open');
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg> Approve Payment`;
+
+  // Show success
+  document.getElementById('succ-amount').textContent   = '₦' + activeOrder.amount.toLocaleString('en-NG');
+  document.getElementById('succ-merchant').textContent = activeOrder.merchant;
+  document.getElementById('succ-id').textContent       = activeOrder.id;
+  document.getElementById('success-modal').classList.add('open');
+
+  activeOrder = null;
+}
+
+// ═══════════════════════════════════════════════
+// REJECT SHEET
+// ═══════════════════════════════════════════════
+function openRejectSheet(orderId, fromLookup = false) {
+  let order;
+  if (fromLookup && lookupOrder_data) {
+    order = lookupOrder_data;
+  } else {
+    order = pendingData.find(o => o.id === orderId);
+  }
+  if (!order) return;
+  activeOrder = { ...order, fromLookup };
+
+  document.getElementById('reject-subtitle').textContent = order.id;
+  document.getElementById('rej-id').textContent       = order.id;
+  document.getElementById('rej-merchant').textContent  = order.merchant;
+  document.getElementById('rej-amount').textContent    = '₦' + order.amount.toLocaleString('en-NG');
+  document.getElementById('reject-modal').classList.add('open');
+}
+
+function closeRejectSheet(e) {
+  if (e && e.target !== document.getElementById('reject-modal')) return;
+  document.getElementById('reject-modal').classList.remove('open');
+  activeOrder = null;
+}
+
+async function executeReject() {
+  if (!activeOrder) return;
+  if (!activeOrder.fromLookup) {
+    const card = document.getElementById('card-' + activeOrder.id);
+    if (card) {
+      card.classList.add('card-leaving-reject');
+      await new Promise(r => setTimeout(r, 350));
+    }
+    pendingData = pendingData.filter(o => o.id !== activeOrder.id);
+    renderPending();
+  }
+  HISTORY.unshift({ id: activeOrder.id, merchant: activeOrder.merchant, amount: activeOrder.amount, status:'rejected', time:'Just now' });
+  renderHistory();
+  document.getElementById('reject-modal').classList.remove('open');
+  showToast('Order ' + activeOrder.id + ' rejected');
+  activeOrder = null;
+}
+
+function closeSuccessSheet() {
+  document.getElementById('success-modal').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+function switchView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours() % 12 || 12;
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+function toggleTheme() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  syncThemeIcon();
+}
+function syncThemeIcon() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.getElementById('theme-icon').innerHTML = dark
+    ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+    : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+renderPending();
+renderCustomers();
+renderHistory();
+syncThemeIcon();
+</script>
+</body>
+</html>

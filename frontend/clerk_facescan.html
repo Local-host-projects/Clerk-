@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Face Scan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <style id="clerk-base">
+    [data-theme="dark"] {
+      --bg: #0A0A0A; --bg-off: #111111; --border: #222222; --border-mid: #2e2e2e;
+      --text: #F5F5F0; --text-muted: #555555; --text-dim: #2a2a2a;
+      --accent: #00E676; --accent-hover: #00ff85; --btn-text: #0A0A0A; --grain: 0.025;
+    }
+    [data-theme="light"] {
+      --bg: #F4F3EF; --bg-off: #ECEAE5; --border: #D0CEC8; --border-mid: #BBBAB4;
+      --text: #111111; --text-muted: #888884; --text-dim: #D0CEC8;
+      --accent: #007A38; --accent-hover: #009444; --btn-text: #FFFFFF; --grain: 0.012;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
+    .mono { font-family: 'Space Mono', monospace; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: var(--grain); pointer-events: none; z-index: 9999; }
+    .clerk-header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 100; transition: background 0.2s, border-color 0.2s; }
+    .clerk-wordmark { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.15em; color: var(--text); }
+    .clerk-wordmark span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-meta { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; border: 1px solid var(--border); padding: 4px 10px; }
+    .theme-toggle { width: 34px; height: 34px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.15s; }
+    .theme-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg-off); }
+    .theme-toggle svg { width: 14px; height: 14px; }
+    .checkout-grid { flex: 1; display: grid; grid-template-columns: 1fr 1px 400px; max-width: 1080px; width: 100%; margin: 0 auto; }
+    .divider-v { background: var(--border); transition: background 0.2s; }
+    .panel-left  { padding: 48px 40px; display: flex; flex-direction: column; }
+    .panel-right { padding: 48px 36px; display: flex; flex-direction: column; }
+    .panel-eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 28px; }
+    .c-block { border: 1px solid var(--border); }
+    .c-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .c-row:last-child { border-bottom: none; }
+    .c-row--emphasis { background: var(--bg-off); }
+    .c-key { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .c-val { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text); }
+    .c-val--accent { color: var(--accent); font-size: 18px; font-weight: 700; }
+    .c-sep { height: 1px; background: var(--border); margin: 20px 0; }
+    .c-btn-primary { width: 100%; background: var(--accent); color: var(--btn-text); border: none; padding: 18px 24px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s; }
+    .c-btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .c-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .c-btn-primary .arrow { font-size: 18px; font-weight: 400; }
+    .c-btn-ghost { width: 100%; background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 14px 24px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; transition: border-color 0.15s, color 0.15s; text-align: center; }
+    .c-btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
+    .c-badge { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .c-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+    .c-badge-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
+    .c-badge-text strong { color: var(--text); }
+    @media (max-width: 768px) {
+      .checkout-grid { grid-template-columns: 1fr; }
+      .divider-v { display: none; }
+      .panel-left { padding: 28px 20px; }
+      .panel-right { padding: 28px 20px; border-top: 1px solid var(--border); }
+      .clerk-header { padding: 14px 20px; }
+    }
+  </style>
+
+  <style id="clerk-page-facescan">
+    /* Camera */
+    .cam-wrap { position: relative; width: 100%; aspect-ratio: 4/3; background: var(--bg-off); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.4s; }
+    .cam-wrap.state-scanning { border-color: var(--accent); }
+    .cam-wrap.state-matched  { border-color: var(--accent); }
+    .cam-wrap.state-failed   { border-color: #FF4444; }
+    #cam-feed { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s; }
+    #cam-canvas { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); pointer-events: none; z-index: 2; }
+    .cam-idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 3; }
+    .cam-idle svg { width: 48px; height: 48px; stroke: var(--text-dim); fill: none; }
+    .cam-idle-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; }
+
+    /* Face frame */
+    .face-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -54%); width: 170px; height: 210px; pointer-events: none; z-index: 3; }
+    .ffc { position: absolute; width: 22px; height: 22px; border-color: var(--accent); border-style: solid; transition: border-color 0.3s; }
+    .ffc.tl { top: 0; left: 0;  border-width: 2px 0 0 2px; }
+    .ffc.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+    .ffc.bl { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
+    .ffc.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+    .cam-wrap.state-failed .ffc { border-color: #FF4444; }
+
+    /* Scan line */
+    .scan-line { position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; pointer-events: none; z-index: 3; }
+    .cam-wrap.state-scanning .scan-line { opacity: 1; animation: sweep 1.8s ease-in-out infinite; }
+    @keyframes sweep { 0% { top:15%; opacity:0; } 10% { opacity:1; } 90% { opacity:1; } 100% { top:85%; opacity:0; } }
+
+    /* Match flash */
+    .cam-wrap.state-matched::before { content: ''; position: absolute; inset: 0; background: var(--accent); opacity: 0; animation: flash 0.5s ease-out forwards; z-index: 10; }
+    @keyframes flash { 0% { opacity:0.3; } 100% { opacity:0; } }
+
+    /* Status bar */
+    .cam-status { position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 14px; background: rgba(0,0,0,0.65); display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px); z-index: 4; }
+    [data-theme="light"] .cam-status { background: rgba(244,243,239,0.8); }
+    .sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; transition: background 0.2s; }
+    .sdot.idle   { background: var(--text-dim); }
+    .sdot.active { background: var(--accent); animation: blink 1s ease-in-out infinite; }
+    .sdot.done   { background: var(--accent); }
+    .sdot.fail   { background: #FF4444; }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .stext { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+    /* Liveness bar */
+    .liveness-bar { margin-top: 16px; display: none; }
+    .challenge-track { display: flex; gap: 6px; margin-bottom: 12px; }
+    .cpip { flex: 1; height: 3px; background: var(--border); transition: background 0.4s; }
+    .cpip.done   { background: var(--accent); }
+    .cpip.active { background: var(--accent); animation: pip-pulse 0.8s ease-in-out infinite; }
+    @keyframes pip-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .challenge-prompt { min-height: 40px; display: flex; align-items: center; gap: 12px; }
+    .cicon { width: 32px; height: 32px; border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+    .ctext { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; line-height: 1.5; }
+    .ctext strong { color: var(--text); }
+    .cam-tips { display: flex; gap: 24px; border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px; flex-wrap: wrap; }
+    .tip-item { display: flex; flex-direction: column; gap: 4px; }
+    .tip-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .tip-value { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text); }
+
+    /* Steps */
+    .steps { display: flex; align-items: center; margin-bottom: 28px; }
+    .step  { display: flex; align-items: center; gap: 8px; }
+    .snum { width: 22px; height: 22px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-dim); flex-shrink: 0; transition: all 0.2s; }
+    .snum.done   { border-color: var(--accent); color: var(--btn-text); background: var(--accent); }
+    .snum.active { border-color: var(--accent); color: var(--accent); }
+    .sname { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
+    .sname.done   { color: var(--accent); }
+    .sname.active { color: var(--text-muted); }
+    .sline { flex: 1; height: 1px; background: var(--border); margin: 0 10px; min-width: 20px; transition: background 0.3s; }
+    .sline.done { background: var(--accent); }
+
+    /* Instruction */
+    .ititle { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; color: var(--text); min-height: 32px; transition: color 0.2s; }
+    .ititle.failed { color: #FF4444; }
+    .ibody  { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); line-height: 1.7; min-height: 52px; }
+
+    /* Agent card */
+    .agent-card { border: 1px solid var(--accent); padding: 16px 18px; margin-bottom: 16px; display: none; flex-direction: column; gap: 12px; animation: slide-in 0.3s ease-out; }
+    .agent-card.show { display: flex; }
+    @keyframes slide-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .ac-header { display: flex; align-items: center; justify-content: space-between; }
+    .ac-label  { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 0.12em; }
+    .ac-check  { width: 18px; height: 18px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+    .ac-check svg { width: 10px; height: 10px; stroke: var(--btn-text); fill: none; }
+    .ac-name { font-size: 16px; font-weight: 800; color: var(--text); }
+
+    /* Awaiting */
+    .agent-waiting { border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 16px; display: none; align-items: flex-start; gap: 10px; }
+    .agent-waiting.show { display: flex; }
+    .wpulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; flex-shrink: 0; margin-top: 2px; animation: blink 1.2s ease-in-out infinite; }
+    .wtext { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); line-height: 1.65; }
+    .wtext strong { color: var(--text); }
+
+    /* Btn shimmer */
+    .btn-shimmer { position: relative; overflow: hidden; }
+    .btn-shimmer::after { content: ''; position: absolute; top:0; left:-100%; width:60%; height:100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); animation: shimmer 1.4s ease-in-out infinite; }
+    @keyframes shimmer { 0% { left:-60%; } 100% { left:140%; } }
+  </style>
+</head>
+<body>
+
+  <header class="clerk-header">
+    <div class="clerk-wordmark">CLR<span>K</span></div>
+    <div class="header-right">
+      <div class="header-meta">FACE SCAN / STEP 2 OF 3</div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="checkout-grid">
+
+    <!-- LEFT: Camera -->
+    <section class="panel-left">
+      <p class="panel-eyebrow">BIOMETRIC VERIFICATION</p>
+
+      <div class="cam-wrap" id="cam-wrap">
+        <video id="cam-feed" autoplay playsinline muted></video>
+        <canvas id="cam-canvas"></canvas>
+
+        <div class="cam-idle" id="cam-idle">
+          <svg viewBox="0 0 24 24" stroke-width="0.8" stroke-linecap="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <rect x="2" y="2" width="20" height="20"/>
+          </svg>
+          <span class="cam-idle-text" id="idle-text">CAMERA INACTIVE</span>
+        </div>
+
+        <div class="face-frame" id="face-frame" style="display:none">
+          <div class="ffc tl"></div>
+          <div class="ffc tr"></div>
+          <div class="ffc bl"></div>
+          <div class="ffc br"></div>
+        </div>
+
+        <div class="scan-line"></div>
+
+        <div class="cam-status">
+          <div class="sdot idle" id="sdot"></div>
+          <span class="stext" id="stext">WAITING FOR CAMERA</span>
+        </div>
+      </div>
+
+      <!-- Liveness challenge bar -->
+      <div class="liveness-bar" id="liveness-bar">
+        <div class="challenge-track">
+          <div class="cpip" id="pip-0"></div>
+          <div class="cpip" id="pip-1"></div>
+          <div class="cpip" id="pip-2"></div>
+        </div>
+        <div class="challenge-prompt">
+          <div class="cicon" id="cicon">👁</div>
+          <div class="ctext" id="ctext"><strong>Blink once</strong> to confirm you are live</div>
+        </div>
+      </div>
+
+      <div class="cam-tips">
+        <div class="tip-item"><span class="tip-label">LIGHTING</span><span class="tip-value">Face a light source</span></div>
+        <div class="tip-item"><span class="tip-label">DISTANCE</span><span class="tip-value">30–50 cm from screen</span></div>
+        <div class="tip-item"><span class="tip-label">PRIVACY</span><span class="tip-value">No footage stored</span></div>
+      </div>
+    </section>
+
+    <div class="divider-v"></div>
+
+    <!-- RIGHT: Controls -->
+    <section class="panel-right">
+
+      <div class="steps">
+        <div class="step"><div class="snum done">✓</div><span class="sname done">ORDER</span></div>
+        <div class="sline done"></div>
+        <div class="step"><div class="snum active">2</div><span class="sname active">SCAN</span></div>
+        <div class="sline" id="sline-2"></div>
+        <div class="step"><div class="snum" id="s3num">3</div><span class="sname" id="s3name">CONFIRM</span></div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <h2 class="ititle" id="ititle">Face your camera.</h2>
+        <p class="ibody" id="ibody">Position your face inside the frame, then tap Begin Scan. Ensure you are in a well-lit space.</p>
+      </div>
+
+      <div class="c-sep"></div>
+
+      <!-- Agent card -->
+      <div class="agent-card" id="agent-card">
+        <div class="ac-header">
+          <span class="ac-label">LINKED AGENT LOCATED</span>
+          <div class="ac-check"><svg viewBox="0 0 12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><polyline points="2,6 5,9 10,3"/></svg></div>
+        </div>
+        <div class="ac-name">Emeka Obi</div>
+        <div class="c-block">
+          <div class="c-row"><span class="c-key">LOCATION</span><span class="c-val">Yaba, Lagos</span></div>
+          <div class="c-row"><span class="c-key">AVAILABLE BALANCE</span><span class="c-val">₦42,000</span></div>
+        </div>
+      </div>
+
+      <!-- Awaiting -->
+      <div class="agent-waiting" id="agent-waiting">
+        <div class="wpulse"></div>
+        <p class="wtext">Approval request sent to <strong>Emeka Obi</strong>. Waiting for confirmation on their Clerk app.</p>
+      </div>
+
+      <!-- Order summary -->
+      <div id="order-summary">
+        <p style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:0.1em;margin-bottom:10px;">ORDER SUMMARY</p>
+        <div class="c-block">
+          <div class="c-row"><span class="c-key">MERCHANT</span><span class="c-val">Arua Studio</span></div>
+          <div class="c-row"><span class="c-key">ITEM</span><span class="c-val">Structured Canvas Tote</span></div>
+          <div class="c-row c-row--emphasis">
+            <span class="c-key" style="color:var(--text)">TOTAL</span>
+            <span class="c-val c-val--accent">₦24,869</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;">
+        <button class="c-btn-primary" id="scan-btn" onclick="handleScanBtn()">
+          <span id="btn-label">Begin Scan</span>
+          <span class="arrow" id="btn-arrow">→</span>
+        </button>
+        <button class="c-btn-ghost" id="back-btn">← Back to order</button>
+        <button class="c-btn-ghost" id="fallback-btn" style="display:none;color:var(--accent);border-color:var(--accent)">
+          Use agent-coordinated payment
+        </button>
+      </div>
+
+      <div class="c-badge" style="margin-top:20px">
+        <div class="c-badge-dot"></div>
+        <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+      </div>
+
+    </section>
+  </main>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CLERK FACE SCAN — MediaPipe Liveness Detection
+// ═══════════════════════════════════════════════════
+
+// MediaPipe landmark indices
+const LM = {
+  L_EYE_TOP: 159, L_EYE_BOT: 145, L_EYE_L: 33,  L_EYE_R: 133,
+  R_EYE_TOP: 386, R_EYE_BOT: 374, R_EYE_L: 362, R_EYE_R: 263,
+  NOSE_TIP: 1, L_CHEEK: 234, R_CHEEK: 454,
+};
+
+const CHALLENGES = [
+  { id: 'blink',     icon: '👁',  html: '<strong>Blink once</strong> to confirm you are live' },
+  { id: 'turn',      icon: '←',  html: '<strong>Turn your head slightly left</strong>' },
+  { id: 'fwd',       icon: '⬤',  html: '<strong>Face forward</strong> and hold still' },
+];
+
+// State
+let appState       = 'idle';
+let faceMesh       = null;
+let mpCam          = null;
+let challengeIdx   = 0;
+let blinkDetected  = false;
+let blinkCooldown  = false;
+let earHistory     = [];
+let turnDetected   = false;
+let fwdFrames      = 0;
+let fwdDetected    = false;
+let retryCount     = 0;
+let cameraStarted  = false;
+
+// DOM
+const $ = id => document.getElementById(id);
+const video   = $('cam-feed');
+const canvas  = $('cam-canvas');
+const ctx     = canvas.getContext('2d');
+
+// ── MATH ────────────────────────────────────────────
+function dist(a, b) {
+  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+}
+
+function ear(lm, t, b, l, r) {
+  return dist(lm[t], lm[b]) / Math.max(dist(lm[l], lm[r]), 0.001);
+}
+
+function noseOffset(lm) {
+  const mid = (lm[LM.L_CHEEK].x + lm[LM.R_CHEEK].x) / 2;
+  const w   = Math.max(dist(lm[LM.L_CHEEK], lm[LM.R_CHEEK]), 0.001);
+  return (lm[LM.NOSE_TIP].x - mid) / w;
+}
+
+// ── DRAW MESH ────────────────────────────────────────
+const MESH_SUBSET = [
+  10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,
+  152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109,
+  33,7,163,144,145,153,154,155,133,362,382,381,380,374,373,390,249,263,
+  61,84,17,314,405,321,375,291,
+];
+
+function drawMesh(lm) {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = dark ? 'rgba(0,230,118,0.2)' : 'rgba(0,122,56,0.18)';
+  MESH_SUBSET.forEach(i => {
+    if (!lm[i]) return;
+    ctx.beginPath();
+    ctx.arc(lm[i].x * canvas.width, lm[i].y * canvas.height, 1.5, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+// ── MEDIAPIPE SETUP ──────────────────────────────────
+function initFaceMesh() {
+  faceMesh = new FaceMesh({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+  });
+  faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6,
+  });
+  faceMesh.onResults(onResults);
+}
+
+function onResults(results) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!results.multiFaceLandmarks?.length) {
+    if (appState === 'challenge') setStatus('active', 'NO FACE — MOVE CLOSER');
+    return;
+  }
+
+  const lm = results.multiFaceLandmarks[0];
+
+  if (appState === 'challenge' || appState === 'ready') drawMesh(lm);
+  if (appState !== 'challenge') return;
+
+  const ch = CHALLENGES[challengeIdx];
+  if      (ch.id === 'blink') processBlink(lm);
+  else if (ch.id === 'turn')  processTurn(lm);
+  else if (ch.id === 'fwd')   processFwd(lm);
+}
+
+// ── LIVENESS PROCESSORS ──────────────────────────────
+
+function processBlink(lm) {
+  const avgEAR = (
+    ear(lm, LM.L_EYE_TOP, LM.L_EYE_BOT, LM.L_EYE_L, LM.L_EYE_R) +
+    ear(lm, LM.R_EYE_TOP, LM.R_EYE_BOT, LM.R_EYE_L, LM.R_EYE_R)
+  ) / 2;
+
+  earHistory.push(avgEAR);
+  if (earHistory.length > 8) earHistory.shift();
+
+  const closed = avgEAR < 0.18;
+  const wasOpen = earHistory.slice(0, -1).some(e => e > 0.24);
+
+  if (closed && wasOpen && !blinkCooldown && !blinkDetected) {
+    blinkDetected = true;
+    blinkCooldown = true;
+    setStatus('active', 'BLINK DETECTED ✓');
+    setTimeout(() => passChallenge(0), 600);
+    setTimeout(() => { blinkCooldown = false; }, 2000);
+  }
+}
+
+function processTurn(lm) {
+  // Mirrored video: turning left = nose moves right in frame (positive offset)
+  if (!turnDetected && noseOffset(lm) > 0.11) {
+    turnDetected = true;
+    setStatus('active', 'HEAD TURN DETECTED ✓');
+    setTimeout(() => passChallenge(1), 500);
+  }
+}
+
+function processFwd(lm) {
+  if (Math.abs(noseOffset(lm)) < 0.06) {
+    fwdFrames++;
+    if (fwdFrames >= 12 && !fwdDetected) {
+      fwdDetected = true;
+      setStatus('active', 'LIVENESS CONFIRMED ✓');
+      setTimeout(() => passChallenge(2), 500);
+    }
+  } else {
+    fwdFrames = 0;
+  }
+}
+
+// ── CHALLENGE FLOW ───────────────────────────────────
+function passChallenge(idx) {
+  setPip(idx, 'done');
+  challengeIdx++;
+
+  if (challengeIdx < CHALLENGES.length) {
+    showChallenge(challengeIdx);
+    if (CHALLENGES[challengeIdx].id === 'turn') {
+      setInstruction('Turn your head.', 'Slowly turn your head slightly to the left.');
+      setStatus('active', 'WAITING FOR HEAD TURN...');
+    } else {
+      setInstruction('Hold still.', 'Face forward and hold still for 2 seconds.');
+      setStatus('active', 'HOLD STILL...');
+    }
+  } else {
+    runMatching();
+  }
+}
+
+async function runMatching() {
+  setState('matching');
+  $('liveness-bar').style.display = 'none';
+  [0,1,2].forEach(i => setPip(i, 'done'));
+  setInstruction('Matching identity...', 'Liveness confirmed. Looking up your Clerk account.');
+
+  // ── Replace with real API call ──────────────────
+  // const res  = await fetch('/api/face/match', { method:'POST', ... });
+  // const data = await res.json();
+  // if (!data.matched) { setState('failed'); return; }
+  await new Promise(r => setTimeout(r, 2200));
+  // ────────────────────────────────────────────────
+
+  setState('matched');
+  await new Promise(r => setTimeout(r, 1200));
+  setState('awaiting');
+}
+
+// ── CAMERA START ─────────────────────────────────────
+async function startCamera() {
+  setState('requesting');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: 640, height: 480 }
+    });
+    video.srcObject = stream;
+    await video.play();
+    video.addEventListener('loadedmetadata', () => {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+    }, { once: true });
+    video.style.opacity = '1';
+    $('cam-idle').style.display = 'none';
+    $('face-frame').style.display = 'block';
+    if (!faceMesh) initFaceMesh();
+    mpCam = new Camera(video, {
+      onFrame: async () => { await faceMesh.send({ image: video }); },
+      width: 640, height: 480,
+    });
+    mpCam.start();
+    cameraStarted = true;
+    setState('ready');
+  } catch (e) {
+    setState('failed');
+    setInstruction('Camera access denied.', 'Allow camera access in your browser settings and try again.', true);
+  }
+}
+
+// ── STATE MACHINE ────────────────────────────────────
+function setState(s) {
+  appState = s;
+  const wrap = $('cam-wrap');
+
+  // Reset cam class
+  wrap.className = 'cam-wrap' + (
+    s === 'challenge' || s === 'matching' ? ' state-scanning' :
+    s === 'matched'   || s === 'awaiting'  ? ' state-matched'  :
+    s === 'failed'                         ? ' state-failed'   : ''
+  );
+
+  switch (s) {
+
+    case 'requesting':
+      $('idle-text').textContent = 'REQUESTING ACCESS...';
+      setStatus('active', 'REQUESTING CAMERA ACCESS');
+      setBtn('Requesting...', '◌', true, true);
+      break;
+
+    case 'ready':
+      setStatus('idle', 'CAMERA READY — TAP BEGIN SCAN');
+      setInstruction('Face your camera.', 'Position your face inside the frame, then tap Begin Scan.');
+      setBtn('Begin Scan', '→', false);
+      $('back-btn').style.display = 'block';
+      break;
+
+    case 'challenge':
+      $('liveness-bar').style.display = 'block';
+      setStatus('active', 'LIVENESS CHECK IN PROGRESS...');
+      setInstruction('Blink once.', 'A quick liveness check confirms you are physically present.');
+      setBtn('Scanning...', '◌', true, true);
+      showChallenge(0);
+      $('back-btn').style.display = 'none';
+      break;
+
+    case 'matching':
+      setStatus('active', 'MATCHING IDENTITY...');
+      setBtn('Matching...', '◌', true, true);
+      break;
+
+    case 'matched':
+      setStatus('done', 'IDENTITY VERIFIED');
+      setInstruction('Identity confirmed.', 'Your Clerk balance has been located. Your agent has been notified.');
+      setBtn('Verified', '✓', true);
+      $('agent-card').classList.add('show');
+      $('order-summary').style.display = 'none';
+      $('sline-2').className = 'sline done';
+      $('s3num').className   = 'snum active';
+      $('s3name').className  = 'sname active';
+      break;
+
+    case 'awaiting':
+      setStatus('active', 'AWAITING AGENT APPROVAL');
+      setInstruction('Waiting for agent.', 'Emeka Obi has been notified on their Clerk app. Payment completes once they confirm.');
+      $('agent-waiting').classList.add('show');
+      setBtn('Awaiting Agent...', '⋯', true);
+      $('back-btn').style.display = 'none';
+      break;
+
+    case 'failed':
+      setStatus('fail', 'SCAN FAILED');
+      setInstruction('Scan unsuccessful.', 'Ensure good lighting and your face is clearly visible, then try again.', true);
+      setBtn('Try Again', '↺', false);
+      $('liveness-bar').style.display = 'none';
+      $('back-btn').style.display = 'block';
+      retryCount++;
+      if (retryCount >= 2) $('fallback-btn').style.display = 'block';
+      break;
+  }
+}
+
+// ── UI HELPERS ───────────────────────────────────────
+function setStatus(cls, text) {
+  $('sdot').className = 'sdot ' + cls;
+  $('stext').textContent = text;
+}
+
+function setInstruction(title, body, failed = false) {
+  $('ititle').textContent = title;
+  $('ititle').className   = 'ititle' + (failed ? ' failed' : '');
+  $('ibody').textContent  = body;
+}
+
+function setBtn(label, arrow, disabled, shimmer = false) {
+  $('btn-label').textContent  = label;
+  $('btn-arrow').textContent  = arrow;
+  $('scan-btn').disabled      = disabled;
+  $('scan-btn').className     = 'c-btn-primary' + (shimmer ? ' btn-shimmer' : '');
+}
+
+function setPip(idx, cls) {
+  $('pip-' + idx).className = 'cpip ' + cls;
+}
+
+function showChallenge(idx) {
+  const ch = CHALLENGES[idx];
+  $('cicon').textContent  = ch.icon;
+  $('ctext').innerHTML    = ch.html;
+  CHALLENGES.forEach((_, i) => setPip(i, i < idx ? 'done' : i === idx ? 'active' : ''));
+}
+
+// ── BUTTON HANDLER ────────────────────────────────────
+async function handleScanBtn() {
+  if (appState === 'idle' || appState === 'ready' || appState === 'failed') {
+    // Reset all liveness state
+    challengeIdx  = 0;
+    blinkDetected = false;
+    blinkCooldown = false;
+    earHistory    = [];
+    turnDetected  = false;
+    fwdFrames     = 0;
+    fwdDetected   = false;
+    $('agent-card').classList.remove('show');
+    $('agent-waiting').classList.remove('show');
+    $('order-summary').style.display = 'block';
+
+    if (!cameraStarted) {
+      await startCamera();
+      if (appState === 'failed') return;
+    }
+
+    setState('challenge');
+  }
+}
+
+// ── THEME ────────────────────────────────────────────
+function toggleTheme() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  syncThemeIcon();
+}
+
+function syncThemeIcon() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  $('theme-icon').innerHTML = dark
+    ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+    : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+}
+
+syncThemeIcon();
+</script>
+</body>
+</html>

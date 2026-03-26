@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Agent Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+[data-theme="dark"]{
+  --bg:#080808;--bg-off:#0F0F0F;--bg-card:#101010;
+  --border:#1C1C1C;--border-md:#2A2A2A;--border-hi:#3A3A3A;
+  --text:#EEECEA;--text-sub:#484844;--text-dim:#252520;
+  --accent:#00E676;--accent-d:#003D1F;--accent-h:#00FF88;
+  --btn-fg:#080808;--red:#FF4040;--red-d:#280A0A;
+  --amber:#F5A200;--amber-d:#281E00;
+  --input-bg:#0C0C0C;--grain:0.028;
+}
+[data-theme="light"]{
+  --bg:#F2F1ED;--bg-off:#EAEAE4;--bg-card:#E6E5E0;
+  --border:#D2D0CA;--border-md:#BCBBB6;--border-hi:#9E9D98;
+  --text:#111110;--text-sub:#888884;--text-dim:#CCCBC6;
+  --accent:#007A38;--accent-d:#D4EDDA;--accent-h:#009444;
+  --btn-fg:#FFFFFF;--red:#CC2020;--red-d:#FDECEA;
+  --amber:#B45309;--amber-d:#FEF3C7;
+  --input-bg:#F7F6F2;--grain:0.010;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--grain);pointer-events:none}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:64px 64px;opacity:.35;pointer-events:none}
+/* Agent glow is top-left, distinguishing from merchant */
+.bg-glow{position:fixed;left:-120px;top:-120px;z-index:0;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,var(--accent-d) 0%,transparent 65%);pointer-events:none;animation:gl 9s ease-in-out infinite}
+@keyframes gl{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.85;transform:scale(1.1)}}
+
+nav{position:relative;z-index:10;height:56px;padding:0 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.75);backdrop-filter:blur(12px);transition:background .2s,border-color .2s}
+[data-theme="light"] nav{background:rgba(242,241,237,.85)}
+.wordmark{font-weight:800;font-size:17px;letter-spacing:.14em;color:var(--text);text-decoration:none}
+.wordmark span{color:var(--accent)}
+.nav-r{display:flex;align-items:center;gap:12px}
+.nav-link{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em;text-decoration:none;transition:color .15s}
+.nav-link:hover{color:var(--text)}
+.theme-btn{width:32px;height:32px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sub);transition:all .15s}
+.theme-btn:hover{border-color:var(--border-md);color:var(--text);background:var(--bg-off)}
+.theme-btn svg{width:13px;height:13px}
+
+.page{flex:1;position:relative;z-index:1;display:grid;grid-template-columns:280px 1fr;max-width:1100px;margin:0 auto;width:100%}
+.sidebar{border-right:1px solid var(--border);padding:48px 32px;display:flex;flex-direction:column;gap:0;position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow-y:auto;transition:border-color .2s}
+.main-form{padding:48px 56px 80px;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.sb-brand{margin-bottom:36px}
+.sb-brand-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sb-brand-tag::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+.sb-brand-h{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.05;margin-bottom:10px}
+.sb-brand-p{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.7}
+.step-list{display:flex;flex-direction:column;gap:1px}
+.step-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid transparent;transition:all .2s}
+.step-item.active{border-color:var(--accent-d);background:var(--accent-d)}
+.step-item.done{background:var(--bg-off);border-color:var(--border)}
+.step-num{width:22px;height:22px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;transition:all .2s}
+.step-item.active .step-num{border-color:var(--accent);color:var(--accent)}
+.step-item.done .step-num{border-color:var(--accent);background:var(--accent);color:var(--btn-fg)}
+.step-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.06em;transition:color .2s}
+.step-item.active .step-label{color:var(--accent)}
+
+/* Earnings estimator */
+.earn-estimator{margin-top:32px;border:1px solid var(--border);padding:16px;background:var(--bg-off);transition:border-color .2s,background .2s}
+.earn-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+.earn-input-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.earn-prefix{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)}
+.earn-input{flex:1;background:var(--input-bg);border:1px solid var(--border);outline:none;padding:8px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);transition:border-color .15s}
+.earn-input:focus{border-color:var(--border-hi)}
+.earn-result{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.65;padding-top:10px;border-top:1px solid var(--border)}
+.earn-result strong{color:var(--accent);font-size:14px}
+
+.sb-bottom{margin-top:auto;padding-top:24px;border-top:1px solid var(--border)}
+.sb-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);line-height:1.65;letter-spacing:.04em}
+.sb-note strong{color:var(--text)}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;animation:fu .3s both}
+.screen.active{display:flex}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.screen-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.screen-tag::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+.screen-title{font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1.05;margin-bottom:8px}
+.screen-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-sub);line-height:1.7;margin-bottom:32px}
+
+/* FIELDS */
+.f-grid{display:grid;gap:18px;margin-bottom:18px}
+.f-grid-2{grid-template-columns:1fr 1fr}
+.frow{display:flex;flex-direction:column;gap:7px}
+.flbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.flbl .opt{color:var(--text-dim)}
+.fwrap{border:1px solid var(--border);background:var(--input-bg);display:flex;align-items:stretch;transition:border-color .15s,background .2s}
+.fwrap:focus-within{border-color:var(--border-hi)}
+.fwrap.e{border-color:var(--red)}
+.fwrap.ok{border-color:var(--accent)}
+.fic{width:40px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);flex-shrink:0}
+.fic svg{width:12px;height:12px;stroke:var(--text-sub);fill:none;transition:stroke .15s}
+.fwrap:focus-within .fic svg{stroke:var(--text)}
+.fwrap input,.fwrap select,.fwrap textarea{flex:1;background:transparent;border:none;outline:none;padding:12px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);letter-spacing:.04em}
+.fwrap input::placeholder,.fwrap textarea::placeholder{color:var(--text-dim)}
+.fwrap select{cursor:pointer;appearance:none}
+.fwrap select option{background:var(--bg-card)}
+.ferr{font-family:'Space Mono',monospace;font-size:9px;color:var(--red);letter-spacing:.06em;display:none;margin-top:-4px}
+.ferr.show{display:block}
+.fhint{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:.04em;margin-top:-4px}
+.fsep{height:1px;background:var(--border);margin:8px 0 20px}
+.fsec-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fsec-label::before{content:'';display:inline-block;width:14px;height:1px;background:var(--accent)}
+
+/* Card type selector */
+.card-types{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:18px}
+.ct-opt{background:var(--bg);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:none;transition:background .15s}
+.ct-opt:hover{background:var(--bg-off)}
+.ct-opt.active{background:var(--bg-off)}
+.ct-opt.active .ct-dot{background:var(--accent)}
+.ct-opt.active .ct-lbl{color:var(--text)}
+.ct-dot{width:5px;height:5px;border-radius:50%;background:var(--border-md);flex-shrink:0;transition:background .2s}
+.ct-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);letter-spacing:.08em;transition:color .2s}
+
+/* Biometric info block */
+.bio-block{background:var(--bg-off);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
+.bio-block-header{display:flex;align-items:center;gap:12px}
+.bio-icon{width:40px;height:40px;border:1px solid var(--accent-d);background:var(--accent-d);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bio-icon svg{width:18px;height:18px;stroke:var(--accent);fill:none}
+.bio-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.bio-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.7}
+.bio-steps{display:flex;flex-direction:column;gap:8px}
+.bio-step{display:flex;align-items:flex-start;gap:12px}
+.bio-step-num{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);flex-shrink:0;width:14px;margin-top:2px}
+.bio-step-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.55}
+
+/* Checklist items */
+.check-row{display:flex;align-items:flex-start;gap:10px}
+.chbox{width:15px;height:15px;border:1px solid var(--border);background:var(--input-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;margin-top:2px}
+.chbox.on{border-color:var(--accent);background:var(--accent)}
+.chbox svg{width:9px;height:9px;stroke:var(--btn-fg);fill:none;display:none}
+.chbox.on svg{display:block}
+.ch-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.6;letter-spacing:.04em}
+.ch-txt a{color:var(--accent);text-decoration:none}
+
+/* Error/info boxes */
+.err-box{display:none;align-items:flex-start;gap:10px;border:1px solid var(--red);background:var(--red-d);padding:11px 14px;margin-bottom:18px}
+.err-box.show{display:flex}
+.err-icon{width:13px;height:13px;stroke:var(--red);fill:none;flex-shrink:0;margin-top:1px}
+.err-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);line-height:1.65}
+.info-box{background:var(--accent-d);border:1px solid var(--accent);padding:14px 16px;display:flex;gap:12px;margin-bottom:20px}
+.info-box svg{width:14px;height:14px;stroke:var(--accent);fill:none;flex-shrink:0;margin-top:1px}
+.info-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);line-height:1.65;letter-spacing:.04em}
+.info-txt strong{color:var(--text)}
+
+/* Buttons */
+.btn-row{display:flex;align-items:center;gap:10px;margin-top:32px}
+.sbtn{background:var(--accent);color:var(--btn-fg);border:none;padding:15px 28px;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .15s;position:relative;overflow:hidden}
+.sbtn:hover:not(:disabled){background:var(--accent-h)}
+.sbtn:disabled{opacity:.4;cursor:not-allowed}
+.sbtn.ld::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:sh 1.2s ease-in-out infinite}
+@keyframes sh{0%{left:-60%}100%{left:140%}}
+.bbtn{background:transparent;color:var(--text-sub);border:1px solid var(--border);padding:14px 20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+.bbtn:hover{border-color:var(--border-md);color:var(--text)}
+
+/* Password strength */
+.pw-bars{display:flex;gap:3px;margin-top:6px}
+.pw-bar{flex:1;height:2px;background:var(--border);transition:background .3s}
+.pw-bar.w{background:var(--red)} .pw-bar.m{background:var(--amber)} .pw-bar.s{background:var(--accent)}
+
+/* Success */
+.success-icon{width:64px;height:64px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.success-icon svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .4s .3s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.agent-id-block{background:var(--bg-off);border:1px solid var(--border);padding:20px 22px;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.agent-id-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase}
+.agent-id-value{font-size:28px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
+.agent-id-hint{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-sub);line-height:1.6}
+.next-steps{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:24px}
+.ns-row{background:var(--bg);padding:14px 16px;display:flex;align-items:flex-start;gap:14px}
+.ns-num{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);flex-shrink:0;margin-top:2px;letter-spacing:.06em}
+.ns-txt{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-sub);line-height:1.6}
+.ns-txt strong{color:var(--text)}
+
+@media(max-width:860px){
+  .page{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main-form{padding:36px 24px 60px}
+  .f-grid-2{grid-template-columns:1fr}
+  .card-types{grid-template-columns:1fr}
+}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav>
+  <a href="/" class="wordmark">CLR<span>K</span></a>
+  <div class="nav-r">
+    <a href="clerk_join.html" class="nav-link">← Choose role</a>
+    <a href="clerk_signin.html" class="nav-link">Sign in</a>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <p class="sb-brand-tag">Agent Registration</p>
+      <h2 class="sb-brand-h">Start earning from your trust network.</h2>
+      <p class="sb-brand-p">Your customers already trust you with their cash. Clerk makes that formal — and pays you for it.</p>
+    </div>
+
+    <div class="step-list">
+      <div class="step-item active" id="si0"><div class="step-num" id="sn0">1</div><span class="step-label">Personal details</span></div>
+      <div class="step-item" id="si1"><div class="step-num" id="sn1">2</div><span class="step-label">Location & capacity</span></div>
+      <div class="step-item" id="si2"><div class="step-num" id="sn2">3</div><span class="step-label">Card & bank setup</span></div>
+      <div class="step-item" id="si3"><div class="step-num" id="sn3">4</div><span class="step-label">Biometric enrolment</span></div>
+      <div class="step-item" id="si4"><div class="step-num" id="sn4">5</div><span class="step-label">Account credentials</span></div>
+    </div>
+
+    <!-- Earnings estimator -->
+    <div class="earn-estimator">
+      <p class="earn-label">Earnings Estimator</p>
+      <div class="earn-input-row">
+        <span class="earn-prefix">₦</span>
+        <input class="earn-input" type="number" id="est-input" placeholder="100000" oninput="calcEarnings()" />
+      </div>
+      <div class="earn-result" id="est-result">Enter the total amount you expect to hold in escrow to see your estimated weekly earnings.</div>
+    </div>
+
+    <div class="sb-bottom">
+      <p class="sb-note">Agents earn <strong>0.5% weekly</strong> on every naira held in customer escrow. No salary cap, no ceiling — your income scales with your customer base.</p>
+    </div>
+  </aside>
+
+  <!-- MAIN FORM -->
+  <main class="main-form">
+
+    <!-- STEP 0: Personal details -->
+    <div class="screen active" id="s0">
+      <p class="screen-tag">Step 1 of 4</p>
+      <h1 class="screen-title">Personal details.</h1>
+      <p class="screen-sub">Tell us about you. Clerk agents are individual people — not companies. Your identity is verified and tied to your approval actions.</p>
+
+      <div class="err-box" id="eb0"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et0">Please fill all required fields.</span></div>
+
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">First Name *</label>
+          <div class="fwrap" id="fn-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><input type="text" id="fn" placeholder="Emeka" autocomplete="given-name"/></div>
+          <span class="ferr" id="fn-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Last Name *</label>
+          <div class="fwrap" id="ln-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><input type="text" id="ln" placeholder="Obi" autocomplete="family-name"/></div>
+          <span class="ferr" id="ln-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Phone Number *</label>
+          <div class="fwrap" id="ph-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.07 9.18 2 2 0 015 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L9.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div><input type="tel" id="ph" placeholder="+234 800 000 0000" autocomplete="tel"/></div>
+          <span class="ferr" id="ph-e">Enter a valid Nigerian phone number.</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Email Address *</label>
+          <div class="fwrap" id="em-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><input type="email" id="em" placeholder="emeka@example.com" autocomplete="email"/></div>
+          <span class="ferr" id="em-e">Enter a valid email address.</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Date of Birth *</label>
+          <div class="fwrap" id="dob-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><input type="date" id="dob" style="color:var(--text)"/></div>
+          <span class="ferr" id="dob-e">Must be 18 or older.</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Gender</label>
+          <div class="fwrap"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+          <select id="gender"><option value="" disabled selected>Prefer not to say</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+        </div>
+        <div class="frow" style="grid-column:1/-1">
+          <label class="flbl">NIN (National Identity Number) *</label>
+          <div class="fwrap" id="nin-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="0"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><input type="text" id="nin" placeholder="00000000000" maxlength="11" oninput="this.value=this.value.replace(/\D/,'')"/></div>
+          <span class="ferr" id="nin-e">Enter a valid 11-digit NIN.</span>
+          <span class="fhint">Your NIN is used for identity verification. It is not stored or shared.</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="sbtn" onclick="next(0)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 1: Location & capacity -->
+    <div class="screen" id="s1">
+      <p class="screen-tag">Step 2 of 4</p>
+      <h1 class="screen-title">Location & capacity.</h1>
+      <p class="screen-sub">Where you operate and how much cash you're comfortable holding. This determines your customer limit on the Clerk network.</p>
+
+      <div class="err-box" id="eb1"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et1">Please fill all required fields.</span></div>
+
+      <div class="fsec-label">Operating Location</div>
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Street / Area *</label>
+          <div class="fwrap" id="loc-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><input type="text" id="loc" placeholder="Bode Thomas, Surulere"/></div>
+          <span class="ferr" id="loc-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">City *</label>
+          <div class="fwrap" id="lcity-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div><input type="text" id="lcity" placeholder="Lagos"/></div>
+          <span class="ferr" id="lcity-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">State *</label>
+          <div class="fwrap" id="lstate-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/></svg></div>
+          <select id="lstate"><option value="" disabled selected>Select state...</option><option>Lagos</option><option>Abuja (FCT)</option><option>Rivers</option><option>Kano</option><option>Oyo</option><option>Kaduna</option><option>Anambra</option><option>Delta</option><option>Ogun</option><option>Other</option></select></div>
+          <span class="ferr" id="lstate-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Landmark <span class="opt">(optional)</span></label>
+          <div class="fwrap"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><polygon points="3,11 22,2 13,21 11,13 3,11"/></svg></div><input type="text" id="landmark" placeholder="Near GTBank ATM"/></div>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+      <div class="fsec-label">Capacity & Availability</div>
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Existing Platform *</label>
+          <div class="fwrap" id="plat-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <select id="plat"><option value="" disabled selected>Select platform...</option><option>OPay</option><option>Moniepoint</option><option>PalmPay</option><option>QuickTeller (Interswitch)</option><option>Paga</option><option>FirstMonie</option><option>None yet</option></select></div>
+          <span class="ferr" id="plat-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Max Escrow to Hold (₦) *</label>
+          <div class="fwrap" id="cap-w"><div class="fic" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-sub);width:40px;justify-content:center">₦</div><input type="number" id="cap" placeholder="200000" min="10000" oninput="calcEarnings()"/></div>
+          <span class="ferr" id="cap-e">Minimum ₦10,000</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Operating Hours *</label>
+          <div class="fwrap" id="hrs-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+          <select id="hrs"><option value="" disabled selected>Select...</option><option>6am – 6pm</option><option>7am – 7pm</option><option>8am – 8pm</option><option>9am – 9pm</option><option>24/7</option></select></div>
+          <span class="ferr" id="hrs-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Max Customers *</label>
+          <div class="fwrap" id="mc-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <select id="mc"><option value="" disabled selected>Select...</option><option>Up to 5</option><option>6 – 15</option><option>16 – 30</option><option>31 – 50</option><option>50+</option></select></div>
+          <span class="ferr" id="mc-e">Required</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(1)">← Back</button>
+        <button class="sbtn" onclick="next(1)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Card & bank -->
+    <div class="screen" id="s2">
+      <p class="screen-tag">Step 3 of 4</p>
+      <h1 class="screen-title">Card & bank setup.</h1>
+      <p class="screen-sub">Your registered debit card is charged when you load a customer's escrow. Your earnings are paid to your bank account weekly.</p>
+
+      <div class="info-box">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="info-txt">Your card is only charged when <strong>you choose</strong> to load a customer's escrow. Clerk will never charge your card without your explicit action in the app.</div>
+      </div>
+
+      <div class="err-box" id="eb2"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et2">Please fill all required fields.</span></div>
+
+      <div class="fsec-label">Funding Card</div>
+      <div class="card-types" id="card-types">
+        <button class="ct-opt active" onclick="setCard('debit')" id="ct-debit"><div class="ct-dot"></div><span class="ct-lbl">Debit Card</span></button>
+        <button class="ct-opt" onclick="setCard('credit')" id="ct-credit"><div class="ct-dot"></div><span class="ct-lbl">Credit Card</span></button>
+      </div>
+      <div class="f-grid">
+        <div class="frow">
+          <label class="flbl">Card Number *</label>
+          <div class="fwrap" id="cnum-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><input type="text" id="cnum" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)"/></div>
+          <span class="ferr" id="cnum-e">Enter a valid card number.</span>
+        </div>
+        <div class="f-grid f-grid-2">
+          <div class="frow">
+            <label class="flbl">Expiry *</label>
+            <div class="fwrap" id="cexp-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div><input type="text" id="cexp" placeholder="MM/YY" maxlength="5" oninput="fmtExpiry(this)"/></div>
+            <span class="ferr" id="cexp-e">Enter a valid expiry.</span>
+          </div>
+          <div class="frow">
+            <label class="flbl">CVV *</label>
+            <div class="fwrap" id="ccvv-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><input type="text" id="ccvv" placeholder="000" maxlength="4" oninput="this.value=this.value.replace(/\D/,'')"/></div>
+            <span class="ferr" id="ccvv-e">Enter CVV.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+      <div class="fsec-label">Earnings Payout Account</div>
+      <div class="f-grid f-grid-2">
+        <div class="frow">
+          <label class="flbl">Bank Name *</label>
+          <div class="fwrap" id="bk-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="22" x2="21" y2="22"/><polygon points="12,2 20,7 4,7"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/></svg></div>
+          <select id="bk"><option value="" disabled selected>Select bank...</option><option>GTBank</option><option>Access Bank</option><option>Zenith Bank</option><option>First Bank</option><option>UBA</option><option>OPay</option><option>PalmPay</option><option>Moniepoint</option><option>Kuda Bank</option><option>Other</option></select></div>
+          <span class="ferr" id="bk-e">Required</span>
+        </div>
+        <div class="frow">
+          <label class="flbl">Account Number *</label>
+          <div class="fwrap" id="bkacct-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><input type="text" id="bkacct" placeholder="0000000000" maxlength="10" oninput="this.value=this.value.replace(/\D/,'')"/></div>
+          <span class="ferr" id="bkacct-e">Enter a valid 10-digit number.</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(2)">← Back</button>
+        <button class="sbtn" onclick="next(2)">Continue <span style="font-size:16px;font-weight:400">→</span></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Credentials -->
+    <div class="screen" id="s3">
+      <p class="screen-tag">Step 4 of 4</p>
+      <h1 class="screen-title">Account credentials.</h1>
+      <p class="screen-sub">Set up your Clerk agent app login. You'll use this to approve payment requests from your customers.</p>
+
+      <div class="err-box" id="eb3"><svg class="err-icon" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="err-txt" id="et3">Please fix errors above.</span></div>
+
+      <div class="bio-block">
+        <div class="bio-block-header">
+          <div class="bio-icon"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+          <div>
+            <div class="bio-title">Biometric enrolment required</div>
+          </div>
+        </div>
+        <p class="bio-sub">After creating your account, you'll complete a one-time face scan in the Clerk agent app. This links your identity to every approval action you take. Steps:</p>
+        <div class="bio-steps">
+          <div class="bio-step"><span class="bio-step-num">01</span><span class="bio-step-txt">Download the Clerk Agent app (Android)</span></div>
+          <div class="bio-step"><span class="bio-step-num">02</span><span class="bio-step-txt">Sign in with your credentials below</span></div>
+          <div class="bio-step"><span class="bio-step-num">03</span><span class="bio-step-txt">Complete 3-challenge liveness scan — blink, turn, hold still</span></div>
+          <div class="bio-step"><span class="bio-step-num">04</span><span class="bio-step-txt">Your face vector is stored locally — never on Clerk servers</span></div>
+        </div>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-grid f-grid-2">
+          <div class="frow">
+            <label class="flbl">Password *</label>
+            <div class="fwrap" id="pw1-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><input type="password" id="pw1" placeholder="Min. 8 characters" oninput="checkPw()"/></div>
+            <div class="pw-bars"><div class="pw-bar" id="pb0"></div><div class="pw-bar" id="pb1"></div><div class="pw-bar" id="pb2"></div><div class="pw-bar" id="pb3"></div></div>
+            <span class="ferr" id="pw1-e">Password must be at least 8 characters.</span>
+          </div>
+          <div class="frow">
+            <label class="flbl">Confirm Password *</label>
+            <div class="fwrap" id="pw2-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><input type="password" id="pw2" placeholder="Repeat password" oninput="chkMatch()"/></div>
+            <span class="ferr" id="pw2-e">Passwords do not match.</span>
+          </div>
+        </div>
+        <div class="frow">
+          <label class="flbl">4-Digit Approval PIN *</label>
+          <div class="fwrap" id="pin-w"><div class="fic"><svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><input type="password" id="pin" placeholder="••••" maxlength="4" oninput="this.value=this.value.replace(/\D/,'')"/></div>
+          <span class="ferr" id="pin-e">Enter a 4-digit PIN.</span>
+          <span class="fhint">This PIN is required each time you approve a payment request in the Clerk app.</span>
+        </div>
+      </div>
+
+      <div class="fsep"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
+        <div class="check-row">
+          <div class="chbox" id="t1" onclick="tog('t1')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I agree to Clerk's <a href="#">Agent Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+        </div>
+        <div class="check-row">
+          <div class="chbox" id="t2" onclick="tog('t2')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I understand I am responsible for any cash I hold in customer escrow accounts and must not release funds without a valid Clerk approval request.</span>
+        </div>
+        <div class="check-row">
+          <div class="chbox" id="t3" onclick="tog('t3')"><svg viewBox="0 0 12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
+          <span class="ch-txt">I confirm I am 18 years or older and that all information provided is accurate.</span>
+        </div>
+      </div>
+      <span class="ferr" id="terms-e">You must accept all terms to continue.</span>
+
+      <div class="btn-row">
+        <button class="bbtn" onclick="back(3)">← Back</button>
+        <button class="sbtn" id="final-btn" onclick="finalSubmit()">
+          <span id="final-lbl">Create Agent Account</span>
+          <span style="font-size:16px;font-weight:400" id="final-arr">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Success -->
+    <div class="screen" id="s4">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5,13 9,17 19,7"/></svg>
+      </div>
+      <h2 class="screen-title">You're a Clerk agent.</h2>
+      <p class="screen-sub" style="margin-bottom:28px">Your agent account has been created. Your unique Agent ID is below — share it with customers so they can link to you on Clerk.</p>
+
+      <div class="agent-id-block">
+        <span class="agent-id-label">Your Agent ID</span>
+        <span class="agent-id-value" id="agent-id-val">CLK-AGT-00000</span>
+        <span class="agent-id-hint">Give this code to any customer who wants to register with you. It links their escrow account to your agent profile.</span>
+      </div>
+
+      <div class="next-steps">
+        <div class="ns-row">
+          <span class="ns-num">01</span>
+          <span class="ns-txt"><strong>Download the Clerk Agent app</strong> from the Play Store and sign in to complete biometric enrolment.</span>
+        </div>
+        <div class="ns-row">
+          <span class="ns-num">02</span>
+          <span class="ns-txt"><strong>Share your Agent ID</strong> with customers and ask them to visit any Clerk checkout page to register.</span>
+        </div>
+        <div class="ns-row">
+          <span class="ns-num">03</span>
+          <span class="ns-txt"><strong>Start earning</strong> — custody fees accumulate weekly and are paid to your registered bank account every Friday.</span>
+        </div>
+      </div>
+
+      <a href="clerk_agent_dashboard.html" class="sbtn" style="text-decoration:none;display:flex;justify-content:space-between;align-items:center">
+        <span>Go to Agent Dashboard</span>
+        <span style="font-size:16px;font-weight:400">→</span>
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let step=0, cardType='debit';
+
+function updateTracker(){
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('si'+i);
+    const nm=document.getElementById('sn'+i);
+    el.classList.remove('active','done');
+    nm.textContent=i+1;
+    if(i<step){el.classList.add('done');nm.innerHTML='✓';}
+    else if(i===step) el.classList.add('active');
+  }
+}
+
+function goStep(n){
+  document.getElementById('s'+step).classList.remove('active');
+  step=n;
+  document.getElementById('s'+step).classList.add('active');
+  updateTracker();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function next(s){
+  if(s===0 && !v0()) return;
+  if(s===1 && !v1()) return;
+  if(s===2 && !v2()) return;
+  goStep(s+1);
+}
+function back(s){goStep(s-1);}
+
+function req(id,wid,eid){const v=document.getElementById(id).value.trim();const ok=!!v;document.getElementById(wid).classList.toggle('e',!ok);document.getElementById(eid).classList.toggle('show',!ok);return ok;}
+function reqSel(id,wid,eid){const v=document.getElementById(id).value;const ok=!!v;document.getElementById(wid).classList.toggle('e',!ok);document.getElementById(eid).classList.toggle('show',!ok);return ok;}
+
+function v0(){
+  let ok=true;
+  if(!req('fn','fn-w','fn-e')) ok=false;
+  if(!req('ln','ln-w','ln-e')) ok=false;
+  const ph=document.getElementById('ph').value.replace(/\s/g,'');
+  if(!/^(\+234|0)[789][01]\d{8}$/.test(ph)){document.getElementById('ph-w').classList.add('e');document.getElementById('ph-e').classList.add('show');ok=false;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('em').value)){document.getElementById('em-w').classList.add('e');document.getElementById('em-e').classList.add('show');ok=false;}
+  // Age check
+  const dob=document.getElementById('dob').value;
+  if(!dob){document.getElementById('dob-w').classList.add('e');document.getElementById('dob-e').classList.add('show');ok=false;}
+  else{const age=(new Date()-new Date(dob))/31557600000;if(age<18){document.getElementById('dob-w').classList.add('e');document.getElementById('dob-e').classList.add('show');ok=false;}}
+  const nin=document.getElementById('nin').value;
+  if(nin.length!==11){document.getElementById('nin-w').classList.add('e');document.getElementById('nin-e').classList.add('show');ok=false;}
+  if(!ok) document.getElementById('eb0').classList.add('show');
+  else document.getElementById('eb0').classList.remove('show');
+  return ok;
+}
+function v1(){
+  let ok=true;
+  if(!req('loc','loc-w','loc-e')) ok=false;
+  if(!req('lcity','lcity-w','lcity-e')) ok=false;
+  if(!reqSel('lstate','lstate-w','lstate-e')) ok=false;
+  if(!reqSel('plat','plat-w','plat-e')) ok=false;
+  const cap=parseFloat(document.getElementById('cap').value);
+  if(!cap||cap<10000){document.getElementById('cap-w').classList.add('e');document.getElementById('cap-e').classList.add('show');ok=false;}
+  if(!reqSel('hrs','hrs-w','hrs-e')) ok=false;
+  if(!reqSel('mc','mc-w','mc-e')) ok=false;
+  if(!ok) document.getElementById('eb1').classList.add('show');
+  else document.getElementById('eb1').classList.remove('show');
+  return ok;
+}
+function v2(){
+  let ok=true;
+  const cn=document.getElementById('cnum').value.replace(/\s/g,'');
+  if(!/^\d{16}$/.test(cn)){document.getElementById('cnum-w').classList.add('e');document.getElementById('cnum-e').classList.add('show');ok=false;}
+  const exp=document.getElementById('cexp').value;
+  if(!/^\d{2}\/\d{2}$/.test(exp)){document.getElementById('cexp-w').classList.add('e');document.getElementById('cexp-e').classList.add('show');ok=false;}
+  if(!document.getElementById('ccvv').value){document.getElementById('ccvv-w').classList.add('e');document.getElementById('ccvv-e').classList.add('show');ok=false;}
+  if(!reqSel('bk','bk-w','bk-e')) ok=false;
+  const ba=document.getElementById('bkacct').value;
+  if(!/^\d{10}$/.test(ba)){document.getElementById('bkacct-w').classList.add('e');document.getElementById('bkacct-e').classList.add('show');ok=false;}
+  if(!ok) document.getElementById('eb2').classList.add('show');
+  else document.getElementById('eb2').classList.remove('show');
+  return ok;
+}
+
+async function finalSubmit(){
+  document.getElementById('eb3').classList.remove('show');
+  let ok=true;
+  if((document.getElementById('pw1').value||'').length<8){document.getElementById('pw1-w').classList.add('e');document.getElementById('pw1-e').classList.add('show');ok=false;}
+  if(document.getElementById('pw1').value!==document.getElementById('pw2').value){document.getElementById('pw2-w').classList.add('e');document.getElementById('pw2-e').classList.add('show');ok=false;}
+  if((document.getElementById('pin').value||'').length!==4){document.getElementById('pin-w').classList.add('e');document.getElementById('pin-e').classList.add('show');ok=false;}
+  if(!['t1','t2','t3'].every(id=>document.getElementById(id).classList.contains('on'))){document.getElementById('terms-e').classList.add('show');ok=false;}
+  if(!ok){document.getElementById('eb3').classList.add('show');return;}
+  const btn=document.getElementById('final-btn');
+  btn.disabled=true;btn.classList.add('ld');
+  document.getElementById('final-lbl').textContent='Creating account...';
+  document.getElementById('final-arr').textContent='◌';
+  await new Promise(r=>setTimeout(r,2400));
+  // Generate agent ID
+  const id='CLK-AGT-'+String(Math.floor(10000+Math.random()*90000));
+  document.getElementById('agent-id-val').textContent=id;
+  goStep(4);
+}
+
+function tog(id){document.getElementById(id).classList.toggle('on');document.getElementById('terms-e').classList.remove('show');}
+function setCard(t){cardType=t;document.getElementById('ct-debit').classList.toggle('active',t==='debit');document.getElementById('ct-credit').classList.toggle('active',t==='credit');}
+
+function fmtCard(el){
+  let v=el.value.replace(/\D/g,'').substring(0,16);
+  el.value=v.replace(/(.{4})/g,'$1 ').trim();
+}
+function fmtExpiry(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>2) v=v.substring(0,2)+'/'+v.substring(2,4);
+  el.value=v;
+}
+
+function checkPw(){
+  const pw=document.getElementById('pw1').value;
+  const bars=[document.getElementById('pb0'),document.getElementById('pb1'),document.getElementById('pb2'),document.getElementById('pb3')];
+  bars.forEach(b=>{b.className='pw-bar';});
+  if(!pw) return;
+  let s=0;
+  if(pw.length>=8) s++;if(/[A-Z]/.test(pw)) s++;if(/[0-9]/.test(pw)) s++;if(/[^A-Za-z0-9]/.test(pw)) s++;
+  const cls=['w','w','m','s'];
+  for(let i=0;i<s;i++) bars[i].classList.add(cls[s-1]);
+}
+function chkMatch(){
+  const m=document.getElementById('pw1').value===document.getElementById('pw2').value;
+  document.getElementById('pw2-w').classList.toggle('ok',m&&document.getElementById('pw2').value.length>0);
+  document.getElementById('pw2-w').classList.toggle('e',!m&&document.getElementById('pw2').value.length>0);
+}
+
+function calcEarnings(){
+  const cap=parseFloat(document.getElementById('cap')?.value||document.getElementById('est-input')?.value||0);
+  const el=document.getElementById('est-result');
+  if(!cap||cap<1000){el.textContent='Enter the total amount you expect to hold in escrow to see your estimated weekly earnings.';return;}
+  const weekly=Math.round(cap*0.005);
+  const monthly=weekly*4;
+  const annual=weekly*52;
+  el.innerHTML=`Holding <strong style="color:var(--text)">₦${cap.toLocaleString('en-NG')}</strong> earns you approximately:<br><strong>₦${weekly.toLocaleString('en-NG')}/week</strong> · ₦${monthly.toLocaleString('en-NG')}/month · ₦${annual.toLocaleString('en-NG')}/year`;
+}
+
+// Sync earnings estimator from capacity field
+document.addEventListener('DOMContentLoaded',()=>{
+  const capEl=document.getElementById('cap');
+  const estEl=document.getElementById('est-input');
+  if(capEl) capEl.addEventListener('input',()=>{if(estEl) estEl.value=capEl.value;calcEarnings();});
+  if(estEl) estEl.addEventListener('input',()=>{if(capEl) capEl.value=estEl.value;calcEarnings();});
+});
+
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';si();}
+function si(){const d=document.documentElement.dataset.theme==='dark';document.getElementById('ti').innerHTML=d?`<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`:`<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;}
+si();
+</script>
+</body>
+</html>

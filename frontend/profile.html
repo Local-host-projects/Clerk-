@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Agent Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   TOKENS (Matching Dashboard)
+═══════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:         #080808;
+  --bg-off:     #0F0F0F;
+  --bg-card:    #111111;
+  --bg-hover:   #151515;
+  --bg-input:   #0C0C0C;
+  --border:     #1C1C1C;
+  --border-mid: #282828;
+  --border-hi:  #363636;
+  --text:       #EEECEA;
+  --text-sub:   #484844;
+  --accent:     #00E676;
+  --accent-h:   #00FF88;
+  --btn-fg:     #080808;
+  --grain:      0.028;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:var(--grain);pointer-events:none;z-index:9999;
+}
+
+/* ═══════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════ */
+.topbar{
+  height:56px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; background:var(--bg); z-index:50;
+}
+.wordmark{font-weight:800; font-size:16px; letter-spacing:.14em; text-decoration:none; color:var(--text)}
+.wordmark span{color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+.app-shell{ flex:1; display:grid; grid-template-columns:220px 1fr; overflow:hidden; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+.sidebar{ border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg); padding-top: 10px;}
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:12px 20px;
+  cursor:pointer; border-left:2px solid transparent; transition:all .15s;
+  font-size:12px; font-weight:700; color:var(--text-sub); text-decoration: none;
+}
+.nav-item:hover{ background:var(--bg-off); color:var(--text); }
+.nav-item.active{ border-left-color:var(--accent); background:var(--bg-off); color:var(--text); }
+.nav-item svg{ width:14px; height:14px; stroke:currentColor; fill:none; }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+.main{ padding:32px; overflow-y:auto; display:flex; flex-direction:column; gap:32px; }
+.view-header{ display:flex; justify-content:space-between; align-items:flex-end; }
+.view-title{ font-size:24px; font-weight:800; }
+.view-sub{ font-family:'Space Mono', monospace; font-size:10px; color:var(--text-sub); margin-top:4px; text-transform: uppercase;}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 48px;
+    max-width: 900px;
+}
+
+/* Avatar Section */
+.avatar-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+.avatar-preview {
+    width: 160px;
+    height: 160px;
+    background: var(--bg-off);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.btn-upload {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid var(--accent);
+    padding: 6px 12px;
+    transition: all 0.2s;
+}
+.btn-upload:hover {
+    background: var(--accent);
+    color: var(--btn-fg);
+}
+
+/* Form Section */
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-group label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+input {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    padding: 14px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+input:focus {
+    border-color: var(--accent);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--btn-fg);
+    border: none;
+    padding: 14px 28px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    align-self: flex-start;
+}
+.btn-primary:hover {
+    background: var(--accent-h);
+}
+
+.success-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="agent_dashboard.html" class="wordmark">CLR<span>K</span></a>
+</header>
+
+<div class="app-shell">
+  <nav class="sidebar">
+    <a href="agent_dashboard.html" class="nav-item">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Deposit Management
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Transaction History
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Profile Settings</h1>
+        <p class="view-sub">Manage your agent identity and business details</p>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- Avatar Section -->
+        <div class="avatar-column">
+            <div class="avatar-preview">
+                <!-- SVG placeholder for a user -->
+                <svg id="avatar-placeholder" viewBox="0 0 24 24" fill="none" stroke="var(--text-sub)" stroke-width="1" style="width: 80px; height: 80px;">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <img id="avatar-image" src="" style="display: none;">
+            </div>
+            <label class="btn-upload">
+                Change Photo
+                <input type="file" id="photo-input" hidden accept="image/*">
+            </label>
+            <p style="font-family:'Space Mono', monospace; font-size:9px; color:var(--text-sub); text-align: center;">JPG, PNG, OR GIF.<br>MAX 2MB.</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-column">
+            <div class="form-group">
+                <label>Business Name</label>
+                <input type="text" id="biz-name" value="CLERK_AGENT_082">
+            </div>
+
+            <div class="form-group">
+                <label>Registered Email</label>
+                <input type="email" id="biz-email" value="agent082@clerk-network.com">
+            </div>
+
+            <div class="form-group">
+                <label>Contact Phone</label>
+                <input type="text" id="biz-phone" value="+234 810 000 0000">
+            </div>
+
+            <div class="form-group">
+                <label>Agent Identification Number</label>
+                <input type="text" value="AG-882-9910-XP" readonly style="color: var(--text-sub); background: var(--bg-off);">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+                <span id="save-note" class="success-note">Profile updated successfully.</span>
+            </div>
+        </div>
+    </div>
+  </main>
+</div>
+
+<script>
+    // Handle Photo Upload Preview
+    document.getElementById('photo-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.getElementById('avatar-image');
+                const placeholder = document.getElementById('avatar-placeholder');
+                img.src = event.target.result;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Mock Save Function
+    function saveProfile() {
+        const btn = document.querySelector('.btn-primary');
+        const note = document.getElementById('save-note');
+        
+        btn.innerText = 'Updating...';
+        btn.style.opacity = '0.7';
+        btn.disabled = true;
+
+        // Simulate API call
+        setTimeout(() => {
+            btn.innerText = 'Save Changes';
+            btn.style.opacity = '1';
+            btn.disabled = false;
+            
+            note.style.display = 'inline-block';
+            setTimeout(() => {
+                note.style.display = 'none';
+            }, 3000);
+        }, 1200);
+    }
+</script>
+
+</body>
+</html>

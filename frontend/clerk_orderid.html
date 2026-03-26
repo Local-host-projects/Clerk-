@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clerk — Order Confirmed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <style id="clerk-base">
+    [data-theme="dark"] {
+      --bg: #0A0A0A; --bg-off: #111111; --border: #222222; --border-mid: #2e2e2e;
+      --text: #F5F5F0; --text-muted: #555555; --text-dim: #2a2a2a;
+      --accent: #00E676; --accent-hover: #00ff85; --btn-text: #0A0A0A; --grain: 0.025;
+    }
+    [data-theme="light"] {
+      --bg: #F4F3EF; --bg-off: #ECEAE5; --border: #D0CEC8; --border-mid: #BBBAB4;
+      --text: #111111; --text-muted: #888884; --text-dim: #D0CEC8;
+      --accent: #007A38; --accent-hover: #009444; --btn-text: #FFFFFF; --grain: 0.012;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
+    .mono { font-family: 'Space Mono', monospace; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: var(--grain); pointer-events: none; z-index: 9999; }
+    .clerk-header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 100; transition: background 0.2s, border-color 0.2s; }
+    .clerk-wordmark { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.15em; color: var(--text); }
+    .clerk-wordmark span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-meta { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; border: 1px solid var(--border); padding: 4px 10px; }
+    .theme-toggle { width: 34px; height: 34px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.15s; }
+    .theme-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg-off); }
+    .theme-toggle svg { width: 14px; height: 14px; }
+    .checkout-grid { flex: 1; display: grid; grid-template-columns: 1fr 1px 400px; max-width: 1080px; width: 100%; margin: 0 auto; }
+    .divider-v { background: var(--border); transition: background 0.2s; }
+    .panel-left  { padding: 48px 40px; display: flex; flex-direction: column; }
+    .panel-right { padding: 48px 36px; display: flex; flex-direction: column; }
+    .panel-eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 28px; }
+    .c-block { border: 1px solid var(--border); transition: border-color 0.2s; }
+    .c-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    .c-row:last-child { border-bottom: none; }
+    .c-row--emphasis { background: var(--bg-off); }
+    .c-key { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .c-val { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text); }
+    .c-val--accent { color: var(--accent); font-size: 18px; font-weight: 700; }
+    .c-sep { height: 1px; background: var(--border); margin: 20px 0; }
+    .c-btn-primary { width: 100%; background: var(--accent); color: var(--btn-text); border: none; padding: 18px 24px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s; }
+    .c-btn-primary:hover { background: var(--accent-hover); }
+    .c-btn-primary .arrow { font-size: 18px; font-weight: 400; }
+    .c-btn-ghost { width: 100%; background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 14px 24px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; cursor: pointer; transition: border-color 0.15s, color 0.15s; text-align: center; display: flex; align-items: center; justify-content: space-between; }
+    .c-btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
+    .c-badge { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .c-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+    .c-badge-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
+    .c-badge-text strong { color: var(--text); }
+    @media (max-width: 768px) {
+      .checkout-grid { grid-template-columns: 1fr; }
+      .divider-v { display: none; }
+      .panel-left { padding: 28px 20px; }
+      .panel-right { padding: 28px 20px; border-top: 1px solid var(--border); }
+      .clerk-header { padding: 14px 20px; }
+    }
+  </style>
+
+  <style id="clerk-page-orderid">
+
+    /* ── CONFIRM STAMP ────────────────────────────────── */
+    .confirm-stamp {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg-off);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.4s, background 0.2s;
+    }
+
+    /* Big watermark order ID behind everything */
+    .stamp-watermark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(14px, 3vw, 22px);
+      font-weight: 700;
+      color: var(--accent);
+      opacity: 0.04;
+      letter-spacing: 0.08em;
+      word-break: break-all;
+      text-align: center;
+      padding: 20px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Check circle */
+    .stamp-check {
+      width: 64px; height: 64px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: check-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes check-in {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .stamp-check svg {
+      width: 28px; height: 28px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: draw-check 0.4s 0.3s ease-out forwards;
+    }
+
+    @keyframes draw-check {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .stamp-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      animation: fade-up 0.4s 0.5s ease-out both;
+    }
+
+    /* Order ID display */
+    .stamp-id {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(18px, 3.5vw, 26px);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      word-break: break-all;
+      text-align: center;
+      padding: 0 24px;
+      animation: fade-up 0.4s 0.6s ease-out both;
+      transition: color 0.2s;
+    }
+
+    .stamp-amount {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      animation: fade-up 0.4s 0.7s ease-out both;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Timestamp strip */
+    .stamp-time {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 10px 18px;
+      background: var(--bg-off);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .stamp-time-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .stamp-settled {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .settled-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* ── ORDER ID COPY BOX ────────────────────────────── */
+    .id-box {
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      transition: border-color 0.2s;
+      margin-top: 20px;
+    }
+
+    .id-box:focus-within { border-color: var(--border-mid); }
+
+    .id-value {
+      flex: 1;
+      padding: 14px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      background: var(--bg-off);
+      border: none;
+      outline: none;
+      transition: background 0.2s, color 0.2s;
+      cursor: default;
+      word-break: break-all;
+    }
+
+    .id-copy-btn {
+      padding: 0 18px;
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      transition: color 0.15s, background 0.15s, border-color 0.2s;
+    }
+
+    .id-copy-btn:hover { color: var(--text); background: var(--bg-off); }
+    .id-copy-btn.copied { color: var(--accent); }
+
+    .id-copy-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; }
+
+    /* ── ACTION BUTTONS ───────────────────────────────── */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* ── STEPS (all done) ─────────────────────────────── */
+    .steps { display: flex; align-items: center; margin-bottom: 28px; }
+    .step  { display: flex; align-items: center; gap: 8px; }
+    .snum { width: 22px; height: 22px; border: 1px solid var(--accent); background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--btn-text); flex-shrink: 0; }
+    .sname { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+    .sline { flex: 1; height: 1px; background: var(--accent); margin: 0 10px; min-width: 20px; }
+
+    /* ── WHAT HAPPENS NEXT ────────────────────────────── */
+    .next-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .next-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .next-item:last-child { border-bottom: none; }
+
+    .next-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      letter-spacing: 0.06em;
+    }
+
+    .next-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .next-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 11px; }
+
+    /* ── RECEIPT DOWNLOAD ─────────────────────────────── */
+    .receipt-hint {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header class="clerk-header">
+    <div class="clerk-wordmark">CLR<span>K</span></div>
+    <div class="header-right">
+      <!-- @slot:header-meta -->
+      <div class="header-meta">ORDER CONFIRMED / STEP 3 OF 3</div>
+      <!-- end @slot:header-meta -->
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="checkout-grid">
+
+    <!-- @slot:panel-left -->
+    <section class="panel-left">
+      <p class="panel-eyebrow">PAYMENT RECEIPT</p>
+
+      <!-- Confirm stamp -->
+      <div class="confirm-stamp" id="confirm-stamp">
+
+        <div class="stamp-watermark" id="stamp-watermark">CLK-2024-00847</div>
+
+        <div class="stamp-check">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="5,13 9,17 19,7"/>
+          </svg>
+        </div>
+
+        <span class="stamp-label">PAYMENT SETTLED</span>
+
+        <div class="stamp-id" id="stamp-id">CLK-2024-00847</div>
+        <div class="stamp-amount" id="stamp-amount">₦24,869 — Arua Studio</div>
+
+        <div class="stamp-time">
+          <span class="stamp-time-text" id="stamp-time"></span>
+          <div class="stamp-settled">
+            <div class="settled-dot"></div>
+            <span class="stamp-time-text">SETTLED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order ID copy row -->
+      <div class="id-box">
+        <span class="id-value" id="id-display">CLK-2024-00847</span>
+        <button class="id-copy-btn" id="copy-btn" onclick="copyOrderId()">
+          <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="0"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          <span id="copy-label">COPY ID</span>
+        </button>
+      </div>
+
+      <!-- Download / Share row -->
+      <div class="action-row">
+        <button class="c-btn-ghost" onclick="downloadReceipt()">
+          <span>Download Receipt</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+        <button class="c-btn-ghost" onclick="shareReceipt()">
+          <span>Share</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="receipt-hint" style="margin-top:12px">Receipt also sent to your registered Clerk account</p>
+
+    </section>
+    <!-- end @slot:panel-left -->
+
+    <div class="divider-v"></div>
+
+    <!-- @slot:panel-right -->
+    <section class="panel-right">
+
+      <!-- Steps — all complete -->
+      <div class="steps">
+        <div class="step"><div class="snum">✓</div><span class="sname">ORDER</span></div>
+        <div class="sline"></div>
+        <div class="step"><div class="snum">✓</div><span class="sname">SCAN</span></div>
+        <div class="sline"></div>
+        <div class="step"><div class="snum">✓</div><span class="sname">CONFIRM</span></div>
+      </div>
+
+      <!-- Transaction summary -->
+      <div class="c-block" style="margin-bottom:20px">
+        <div class="c-row">
+          <span class="c-key">ORDER ID</span>
+          <span class="c-val" id="summary-id">CLK-2024-00847</span>
+        </div>
+        <div class="c-row">
+          <span class="c-key">MERCHANT</span>
+          <span class="c-val">Arua Studio</span>
+        </div>
+        <div class="c-row">
+          <span class="c-key">ITEM</span>
+          <span class="c-val">Structured Canvas Tote × 1</span>
+        </div>
+        <div class="c-row">
+          <span class="c-key">AGENT</span>
+          <span class="c-val">Emeka Obi — Yaba</span>
+        </div>
+        <div class="c-row">
+          <span class="c-key">SETTLED VIA</span>
+          <span class="c-val">Interswitch</span>
+        </div>
+        <div class="c-row c-row--emphasis">
+          <span class="c-key" style="color:var(--text)">TOTAL PAID</span>
+          <span class="c-val c-val--accent">₦24,869</span>
+        </div>
+      </div>
+
+      <div class="c-sep" style="margin-top:0"></div>
+
+      <!-- What happens next -->
+      <h2 class="next-title">What happens next.</h2>
+
+      <div>
+        <div class="next-item">
+          <span class="next-num">01</span>
+          <div class="next-text">
+            <strong>Merchant has been notified</strong>
+            Arua Studio received your order and payment confirmation via webhook. Expect a dispatch confirmation shortly.
+          </div>
+        </div>
+        <div class="next-item">
+          <span class="next-num">02</span>
+          <div class="next-text">
+            <strong>Agent balance updated</strong>
+            ₦24,869 has been debited from Emeka Obi's escrow. Your remaining balance is ₦17,131.
+          </div>
+        </div>
+        <div class="next-item">
+          <span class="next-num">03</span>
+          <div class="next-text">
+            <strong>Save your order ID</strong>
+            Use <strong style="display:inline">CLK-2024-00847</strong> to track this order or raise a dispute with Clerk support.
+          </div>
+        </div>
+      </div>
+
+      <!-- Return CTA -->
+      <button class="c-btn-primary" style="margin-top:24px" onclick="returnToMerchant()">
+        <span>Return to Store</span>
+        <span class="arrow">→</span>
+      </button>
+
+      <div class="c-badge" style="margin-top:20px">
+        <div class="c-badge-dot"></div>
+        <p class="c-badge-text">Secured by <strong>CLERK</strong> — cash-linked biometric checkout</p>
+      </div>
+
+    </section>
+    <!-- end @slot:panel-right -->
+
+  </main>
+
+  <script>
+    // ── ORDER DATA ─────────────────────────────────────
+    // In production these come from your Laravel controller
+    const ORDER = {
+      id:       'CLK-2024-00847',
+      merchant: 'Arua Studio',
+      item:     'Structured Canvas Tote',
+      amount:   '₦24,869',
+      agent:    'Emeka Obi',
+      settledAt: new Date(),
+    };
+
+    // ── HYDRATE PAGE ───────────────────────────────────
+    function hydrate() {
+      const fmt = d => d.toLocaleString('en-NG', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      document.getElementById('stamp-watermark').textContent = ORDER.id;
+      document.getElementById('stamp-id').textContent        = ORDER.id;
+      document.getElementById('stamp-amount').textContent    = ORDER.amount + ' — ' + ORDER.merchant;
+      document.getElementById('stamp-time').textContent      = fmt(ORDER.settledAt);
+      document.getElementById('id-display').textContent      = ORDER.id;
+      document.getElementById('summary-id').textContent      = ORDER.id;
+    }
+
+    hydrate();
+
+    // ── COPY ORDER ID ──────────────────────────────────
+    async function copyOrderId() {
+      const btn   = document.getElementById('copy-btn');
+      const label = document.getElementById('copy-label');
+      try {
+        await navigator.clipboard.writeText(ORDER.id);
+        btn.classList.add('copied');
+        label.textContent = 'COPIED ✓';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          label.textContent = 'COPY ID';
+        }, 2000);
+      } catch {
+        // Fallback for browsers without clipboard API
+        const el = document.createElement('textarea');
+        el.value = ORDER.id;
+        el.style.position = 'fixed';
+        el.style.opacity  = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        label.textContent = 'COPIED ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          label.textContent = 'COPY ID';
+        }, 2000);
+      }
+    }
+
+    // ── DOWNLOAD RECEIPT ───────────────────────────────
+    function downloadReceipt() {
+      const fmt = d => d.toLocaleString('en-NG', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      const receipt = `
+CLERK PAYMENT RECEIPT
+══════════════════════════════════════
+ORDER ID    : ${ORDER.id}
+DATE        : ${fmt(ORDER.settledAt)}
+STATUS      : SETTLED
+──────────────────────────────────────
+MERCHANT    : ${ORDER.merchant}
+ITEM        : ${ORDER.item}
+AGENT       : ${ORDER.agent}
+SETTLED VIA : Interswitch
+──────────────────────────────────────
+TOTAL PAID  : ${ORDER.amount}
+══════════════════════════════════════
+Secured by CLERK — clerk.ng
+      `.trim();
+
+      const blob = new Blob([receipt], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `CLERK-RECEIPT-${ORDER.id}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── SHARE ──────────────────────────────────────────
+    async function shareReceipt() {
+      const text = `Clerk Payment Confirmed\nOrder ID: ${ORDER.id}\nAmount: ${ORDER.amount}\nMerchant: ${ORDER.merchant}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Clerk Receipt', text });
+        } catch {}
+      } else {
+        // Fallback: copy share text
+        await navigator.clipboard.writeText(text).catch(() => {});
+        alert('Receipt details copied to clipboard.');
+      }
+    }
+
+    // ── RETURN TO MERCHANT ─────────────────────────────
+    function returnToMerchant() {
+      // In production: redirect to merchant's success URL
+      // window.location.href = merchantReturnUrl;
+      alert('Redirecting to ' + ORDER.merchant + '...');
+    }
+
+    // ── THEME ──────────────────────────────────────────
+    function toggleTheme() {
+      const h = document.documentElement;
+      h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+      syncThemeIcon();
+    }
+
+    function syncThemeIcon() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.getElementById('theme-icon').innerHTML = dark
+        ? `<path d="M12 17a5 5 0 100-10 5 5 0 000 10zm0-13v2M12 18v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`
+        : `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>`;
+    }
+
+    syncThemeIcon();
+  </script>
+
+</body>
+</html>
