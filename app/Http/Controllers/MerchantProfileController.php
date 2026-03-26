@@ -7,14 +7,21 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MerchantProfile;
 use App\Models\Products;
+use App\Models\Orders;
+use Illuminate\Support\Str;
 
 class MerchantProfileController extends Controller
 {
     
     
-    public function projects(){
-        $page = 'projects';
-        return view('dashboard.merchant.projects',compact('page'));
+    public function dashboard(){
+        $order = Orders::all();
+        $page = 'dashboard';
+        return view('dashboard.merchant.dashboard',compact(['page','order']));
+    }
+    public function showProduct($id){
+        $product = Products::find($id);
+        return view('dashboard.merchant.view-single-product',compact('product'));
     }
     public function store(Request $request){
         // dd($request);
@@ -31,15 +38,127 @@ class MerchantProfileController extends Controller
     //    dd($data);
        $merchant = MerchantProfile::create($data);
        if ($merchant) {
-         return redirect()->route('merchant.projects');
+         return redirect()->route('merchant.dashboard');
        }
         return back()->with('error','error creating merchant profile, try again.');
     }
     public function products(){
         $page = 'products';
         $merchant = MerchantProfile::where('id',Auth::user()->id)->first('id');
-        $products = Products::where('merchant',$merchant->id)->get();
+        $products = Products::where('merchant',$merchant->id)->orderBy('created_at','desc')->get();
         return view('dashboard.merchant.products',compact(['page','products']));
     }
+//     public function createOrder(Request $request)
+// {
+//     $product = Products::findOrFail($request->product_id);
+
+//     if ($request->quantity < 1) {
+//         return back()->with('error', 'Invalid quantity.');
+//     }
+
+//     if ($product->type === 'physical' && $product->stock < $request->quantity) {
+//         return back()->with('error', 'Not enough stock.');
+//     }
+
+//     $merchant = $product->merchant;
+
+//     if (!$merchant) {
+//         return back()->with('error', 'Merchant profile missing.');
+//     }
+
+//     $total = $product->price * $request->quantity;
+
+//     do {
+//     $orderId = 'CK' . strtoupper(Str::random(6));
+// } while (Orders::where('order_id', $orderId)->exists());
+//     // dd([
+//     //     'product_id'  => $product->id,
+//     //     'merchant_id' => $merchant,
+//     //     'quantity'    => $request->quantity,
+//     //     'total_price' => $total,
+//     //     'order_id'    => $orderId,
+//     // ]);
+//     $order = Orders::create([
+//         'product_id'  => $product->id,
+//         'merchant_id' => $merchant,
+//         'quantity'    => $request->quantity,
+//         'total_price' => $total,
+//         'order_id'    => $orderId,
+//     ]);
+
+//     if ($product->type === 'physical') {
+//         $product->decrement('stock', $request->quantity);
+//     }
+
+//     return redirect()->route('product.order',['id'=>$order->id]);
+// }
+public function createOrder(Request $request)
+{
+    // Validate the incoming delivery data
+    $validated = $request->validate([
+        'product_id'      => 'required|exists:products,id',
+        'quantity'        => 'required|integer|min:1',
+        'customer_name'   => 'required|string|max:255',
+        'customer_phone'  => 'required|string|max:20',
+        'customer_email'  => 'nullable|email|max:255',
+        'address'         => 'required|string|max:500',
+        'city'            => 'required|string|max:100',
+        'postal_code'     => 'nullable|string|max:20',
+        'payment_method'  => 'required|string',
+    ]);
+    // dd($request->all());
+    $product = Products::findOrFail($request->product_id);
+
+    // Physical goods stock check
+    if ($product->type === 'physical' && $product->stock < $request->quantity) {
+        return back()->with('error', 'Not enough stock available for this item.');
+    }
+
+    // Ensure merchant exists (retrieving the ID specifically)
+    $merchantId = $product->merchant;
+    if (!$merchantId) {
+        return back()->with('error', 'The merchant profile for this product is missing.');
+    }
+
+    // Calculate Total: (Price * Qty) + 1.5% Service Fee
+    $subtotal = $product->price * $request->quantity;
+    $serviceFee = $subtotal * 0.015;
+    $finalTotal = $subtotal + $serviceFee;
+
+    // Generate unique Clerk Order ID (CK + 6 Alphanumeric)
+    do {
+        $orderId = 'CK' . strtoupper(Str::random(6));
+    } while (Orders::where('order_id', $orderId)->exists());
+
+    // Create the order record with delivery details
+    $order = Orders::create([
+        'product_id'      => $product->id,
+        'merchant_id'     => $merchantId,
+        'order_id'        => $orderId,
+        'quantity'        => $request->quantity,
+        'total_price'     => $finalTotal,
+        'customer_name'   => $request->customer_name,
+        'customer_phone'  => $request->customer_phone,
+        'customer_email'  => $request->customer_email,
+        'address'         => $request->address,
+        'city'            => $request->city,
+        'postal_code'     => $request->postal_code,
+        'payment_method'  => $request->payment_method,
+        'payment_status'  => 'pending', // Defaulting to pending until transaction is verified
+    ]);
+
+    // Inventory management
+    if ($product->type === 'physical') {
+        $product->decrement('stock', $request->quantity);
+    }
+
+    // Redirect to the order confirmation/payment page
+    return redirect()->route('product.order', ['id' => $order->id]);
+}
+public function order($id){
+    $order = Orders::find($id);
+    $product = Products::find($order->product_id);
+    return view('product.order',compact(['order','product']));
+}
     
 }

@@ -14,14 +14,21 @@ class AgentProfileController extends Controller
             'full_name'=>'required|max:255',
             'phone'=>'required|max:11',
             'address'=>'required|string',
-            'connected_bank_account'=>'required',
-        ]);
-        $data['user_id'] = Auth::user()->id; 
+            'connected_bank_accounts'=>'required',
+            ]);
+            $data['user_id'] = Auth::user()->id; 
+        // dd($data);
         $agent = AgentProfile::create($data);
         if ($agent) {
-            return redirect()->route('merchant.projects');
+            return redirect()->route('agent.payment.register');
         }
         return back()->with('error','error creating merchant profile, try again.');
+    }
+    public function panel(){
+        return view('dashboard.agent.panel');
+    }
+    public function paymentRegister(){
+        return view('dashboard.agent.payment.registerPaymentDetails');
     }
     
 }

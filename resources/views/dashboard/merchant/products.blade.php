@@ -1,4 +1,7 @@
 @extends('layout.merchant')
+@section('title')
+    Products
+@endsection
 @section('main')
     <main class="main">
     <div class="view-header">
@@ -13,37 +16,49 @@
       <div class="tab" onclick="filterType('digital')">Digital</div>
       <div class="tab" onclick="filterType('physical')">Physical</div>
     </div>
-    @dd($products)
+    {{-- @dd($products) --}}
     <div class="product-grid" id="product-list">
       <!-- Mock Physical Product -->
       @foreach ($products as $product)
+      {{-- <a href="{{route('merchant.showProduct',['id'=>$product->id])}}">
       <div class="product-card" data-type="{{$product->type}}">
-        <div class="product-img-placeholder">Product Image</div>
-        <div class="product-meta">
-          <span class="product-tag">{{$product->type}}</span>
-          <h3 class="product-name">Nomad Tech Jacket</h3>
-          <span class="product-price">₦ 85,000.00</span>
-        </div>
+          <div class="product-img-placeholder">
+              @if($product->image_url)
+                  <img src="{{ asset('storage/products/'.$product->image_url) }}" alt="{{ $product->name }}" class="product-img">
+              @else
+                  No Image
+              @endif
+          </div>
+          <div class="product-meta">
+              <span class="product-tag">{{ ucfirst($product->type) }}</span>
+              <h3 class="product-name">{{ $product->name }}</h3>
+              <span class="product-price">₦ {{ number_format($product->price) }}</span>
+              @if($product->description)
+                  <p class="product-description">{{ $product->description }}</p>
+              @endif
+          </div>
       </div>
+      </a> --}}
+      <a href="{{route('merchant.showProduct',['id'=>$product->id])}}" style="text-decoration: none; color: inherit;">
+    <div class="product-card" data-type="{{$product->type}}">
+        <div class="product-img-placeholder">
+            @if($product->image_url)
+                <img src="{{ asset('storage/products/'.$product->image_url) }}" alt="{{ $product->name }}" class="product-img">
+            @else
+                No Image
+            @endif
+        </div>
+        <div class="product-meta">
+            <span class="product-tag">{{ ucfirst($product->type) }}</span>
+            <h3 class="product-name">{{ $product->name }}</h3>
+            <span class="product-price">₦ {{ number_format($product->price) }}</span>
+            @if($product->description)
+                <p class="product-description">{{ $product->description }}</p>
+            @endif
+        </div>
+    </div>
+</a>
       @endforeach
-      <div class="product-card" data-type="physical">
-        <div class="product-img-placeholder">Product Image</div>
-        <div class="product-meta">
-          <span class="product-tag">Physical</span>
-          <h3 class="product-name">Nomad Tech Jacket</h3>
-          <span class="product-price">₦ 85,000.00</span>
-        </div>
-      </div>
-
-      <!-- Mock Digital Product -->
-      <div class="product-card" data-type="digital">
-        <div class="product-img-placeholder" style="border-style: solid;">Digital Asset</div>
-        <div class="product-meta">
-          <span class="product-tag">Digital</span>
-          <h3 class="product-name">Clerk UI Kit .fig</h3>
-          <span class="product-price">₦ 12,000.00</span>
-        </div>
-      </div>
     </div>
   </main>
 @endsection
@@ -68,7 +83,7 @@
         'stock', 'image_url', 'type', 'variants', 'filepath', --}}
       <div style="display: flex; flex-direction: column; gap: 20px;">
       <form id="create-product-form" data-digital="{{ route('merchant.create.digital.product') }}"
-      data-physical="{{ route('merchant.create.physical.product') }}" action="" method="post">
+      data-physical="{{ route('merchant.create.physical.product') }}" action="" method="post" enctype="multipart/form-data">
       @csrf
         <div class="input-group">
           <label>Product Name</label>
@@ -108,7 +123,7 @@
 
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
           <span class="action-btn" style="background:transparent; border:1px solid var(--border); color:var(--text-sub); padding:10px 20px; text-transform:uppercase; font-family:'Space Mono'; font-size:10px; cursor:pointer;" onclick="resetModal()">Back</span>
-          <button class="btn-primary" >Complete Creation</button>
+          <button type="submit" class="btn-primary" >Complete Creation</button>
         </div>
       </form>
       </div>
@@ -140,9 +155,24 @@
 }
 .product-card:hover { transform: translateY(-4px); border-color: var(--border-hi); }
 .product-img-placeholder {
-  aspect-ratio: 1; background: var(--bg-off); border: 1px dashed var(--border-mid);
-  display: flex; align-items: center; justify-content: center; color: var(--text-sub);
-  font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase;
+  aspect-ratio: 1;
+  background: var(--bg-off);
+  border: 1px dashed var(--border-mid);
+  display: flex;
+  align-items: center; 
+  justify-content: center; 
+  color: var(--text-sub);
+  font-family: 'Space Mono', monospace; 
+  font-size: 10px; 
+  text-transform: uppercase;
+  overflow: hidden; /* important for images */
+}
+
+.product-img-placeholder img.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .product-meta { display: flex; flex-direction: column; gap: 4px; }
 .product-tag {
@@ -151,7 +181,17 @@
 }
 .product-name { font-weight: 800; font-size: 16px; }
 .product-price { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--accent); }
-
+.product-description {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 8px;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* limits to 3 lines */
+    -webkit-box-orient: vertical;
+}
 /* Modal */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px);

@@ -11,9 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductsController extends Controller
 {
+    public function show($id){
+        $product = Products::find($id);
+        // dd($product);
+        return view('product.product-page',compact('product'));
+    }
     public function createDigitalGood(Request $request)
     {
-        
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -25,8 +29,8 @@ class ProductsController extends Controller
             $data['type']  = 'digital';
             $data['stock'] = 0;
             if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('products', 'public');
-                $data['image_url'] = Storage::url($path);
+                    $file = Upload($request->file('image'));
+                    $data['image_url'] = $file;
             }
             $merchant = MerchantProfile::where('id',Auth::user()->id)->first('id');
             $data['merchant'] = $merchant->id; // optional thumbnail
@@ -48,15 +52,15 @@ class ProductsController extends Controller
             'variants'    => 'nullable|array',
             'image'       => 'required|image|max:5120', // max 5MB
             ]);
-            dd($data);
+            // dd($data);
 
         $data['type']     = 'physical';
         $data['filepath'] = null; // physical goods don’t have digital files
 
         // Upload image to storage/app/public/products
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $data['image_url'] = Storage::url($path);
+            $file = Upload($request->file('image'));
+            $data['image_url'] = $file;
         }
         $merchant = MerchantProfile::where('id',Auth::user()->id)->first('id');
         $data['merchant'] = $merchant->id;
@@ -64,4 +68,38 @@ class ProductsController extends Controller
 
         return redirect()->back()->with('success', 'Physical product created successfully!');
     }
+    public function updateProduct(Request $request, $id)
+{
+    $product = Products::findOrFail($id);
+
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'price' => 'required|numeric',
+        'description' => 'nullable|string',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        'stock' => 'nullable|integer',
+        'filepath' => 'nullable|string',
+    ]);
+
+    // handle image upload (only if provided)
+    if ($request->hasFile('image')) {
+        $data['image_url'] = Upload($request->file('image'));
+    }
+
+    // handle product type logic
+    if ($product->type === 'digital') {
+        $data['stock'] = 0; // digital goods don’t use stock
+    }
+
+    if ($product->type === 'physical') {
+        $data['filepath'] = null; // physical goods don’t need file
+    }
+
+    $product->update($data);
+
+    return redirect()
+        ->route('merchant.showProduct', ['id' => $product->id])
+        ->with('success', 'Product updated successfully.');
+}
+
 }

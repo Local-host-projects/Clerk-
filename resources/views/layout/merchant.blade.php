@@ -53,6 +53,34 @@ body::after{
 .wordmark{font-weight:800; font-size:16px; letter-spacing:.14em; text-decoration:none; color:var(--text)}
 .wordmark span{color:var(--accent)}
 
+/* Role Toggle */
+.role-toggle {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 3px;
+  border-radius: 100px;
+  gap: 2px;
+}
+.role-btn {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 14px;
+  border-radius: 100px;
+  text-decoration: none;
+  color: var(--text-sub);
+  transition: all 0.2s ease;
+}
+.role-btn:hover {
+  color: var(--text);
+}
+.role-btn.active {
+  background: var(--accent);
+  color: var(--btn-fg);
+}
+
 /* ═══════════════════════════════════════════
    APP SHELL
 ═══════════════════════════════════════════ */
@@ -74,11 +102,7 @@ body::after{
    MAIN CONTENT
 ═══════════════════════════════════════════ */
 
-
-
-
 /* Projects Table */
-
 
   </style>
   @stack('styles')
@@ -87,11 +111,20 @@ body::after{
 
 <header class="topbar">
   <a href="#" class="wordmark">CLR<span>K</span> — CONSOLE</a>
+  @php
+      $db = 'merchant';
+  @endphp
+
+  <div class="role-toggle">
+    <!-- Update these href values to your actual routes -->
+    <a href="{{ route('merchant.dashboard') }}" class="role-btn @if($db == 'merchant') active @endif">Merchant</a>
+    <a href="{{route('agent.panel')}}" class="role-btn @if($db == 'agent') active @endif">Agent</a>
+  </div>
 </header>
 
 <div class="app-shell">
   <nav class="sidebar">
-    <a href="{{route('merchant.projects')}}" class="nav-item @if($page == 'projects') active @endif">Projects</a>
+    <a href="{{route('merchant.dashboard')}}" class="nav-item @if($page == 'dashboard') active @endif">Dashboard</a>
     <a href="{{route('merchant.products')}}" class="nav-item @if($page == 'products') active @endif">Products</a>
     <a href="#" class="nav-item">Profile</a>
     <a href="#" class="nav-item">Settings</a>

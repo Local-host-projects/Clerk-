@@ -20,7 +20,7 @@ class AuthController extends Controller
         ]);
         $auth = Auth::attempt(['email' => $data['email'], 'password' => $data['password']]);
         if ($auth) {
-            return redirect()->route('merchant.projects') ;
+            return redirect()->route('merchant.dashboard') ;
         }
         return back()->with('error','Failed to login.');
         
@@ -41,7 +41,7 @@ class AuthController extends Controller
         ]);
         if($user){
             Auth::attempt($request->only('email','password'));
-            return redirect()->route('merchant.projects');
+            return redirect()->route('merchant.dashboard');
         }
         return back()->with('error','Failed to Register your account , try again.');
     }

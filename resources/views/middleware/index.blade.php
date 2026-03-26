@@ -121,8 +121,9 @@ input:focus { border-color: var(--accent); }
     <button class="role-btn" id="btn-agent" onclick="setRole('agent')">Agent</button>
   </div>
 
+
   <!-- Merchant Form (Maps to merchant_profiles table) -->
-  <form  class="form-card" method='post' action="{{route('merchant.profile.store')}}">
+  <form id="form-merchant" class="form-card" method='post' action="{{route('merchant.profile.store')}}">
   @csrf
   @if (session()->has('error'))
     <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">

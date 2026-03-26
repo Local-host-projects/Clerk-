@@ -19,16 +19,16 @@ class Agent
         $user = Auth::user();
 
         // Check if user has a merchant profile
-        $merchantProfile = $user->merchant()->latest()->first(); // pick latest if multiple
+        $agentProfile = $user->agent()->latest()->first(); // pick latest if multiple
 
-        if (!$merchantProfile) {
+        if (!$agentProfile) {
             // No merchant profile yet → redirect to onboarding
-            return redirect()->route('createRole', ['role' => 'merchant']);
+            return redirect()->route('createRole', ['role' => 'agent']);
         }
 
-        if ($merchantProfile->status !== 'complete') {
+        if ($agentProfile->status !== 'complete') {
             // Profile exists but incomplete → redirect to onboarding
-            return redirect()->route('createRole', ['role' => 'merchant']);
+            return redirect()->route('createRole', ['role' => 'agent']);
         }
 
         // Profile exists and complete → allow access
