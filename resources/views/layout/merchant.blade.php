@@ -126,8 +126,8 @@ body::after{
   <nav class="sidebar">
     <a href="{{route('merchant.dashboard')}}" class="nav-item @if($page == 'dashboard') active @endif">Dashboard</a>
     <a href="{{route('merchant.products')}}" class="nav-item @if($page == 'products') active @endif">Products</a>
-    <a href="#" class="nav-item">Profile</a>
-    <a href="#" class="nav-item">Settings</a>
+    <a href="{{route('merchant.profile')}}" class="nav-item @if($page == 'profile') active @endif">Profile</a>
+    {{-- <a href="" class="nav-item">Settings</a> --}}
   </nav>
   @yield('main')
 </div>

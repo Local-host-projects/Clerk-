@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Orders;
+use App\Models\Products;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\MerchantProfile;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\MerchantProfile;
-use App\Models\Products;
-use App\Models\Orders;
-use Illuminate\Support\Str;
 
 class MerchantProfileController extends Controller
 {
@@ -44,7 +44,7 @@ class MerchantProfileController extends Controller
     }
     public function products(){
         $page = 'products';
-        $merchant = MerchantProfile::where('id',Auth::user()->id)->first('id');
+        $merchant = MerchantProfile::where('user_id',Auth::user()->id)->first('id');
         $products = Products::where('merchant',$merchant->id)->orderBy('created_at','desc')->get();
         return view('dashboard.merchant.products',compact(['page','products']));
     }
@@ -127,8 +127,11 @@ public function createOrder(Request $request)
 
     // Generate unique Clerk Order ID (CK + 6 Alphanumeric)
     do {
-        $orderId = 'CK' . strtoupper(Str::random(6));
+        $orderId = 'CK' . strtoupper(Str::random(10));
     } while (Orders::where('order_id', $orderId)->exists());
+    do {
+        $secret = strtoupper(Str::random(16));
+    } while (Orders::where('secret', $orderId)->exists());
 
     // Create the order record with delivery details
     $order = Orders::create([
@@ -144,6 +147,7 @@ public function createOrder(Request $request)
         'city'            => $request->city,
         'postal_code'     => $request->postal_code,
         'payment_method'  => $request->payment_method,
+        'secret'          => $secret,
         'payment_status'  => 'pending', // Defaulting to pending until transaction is verified
     ]);
 
@@ -159,6 +163,24 @@ public function order($id){
     $order = Orders::find($id);
     $product = Products::find($order->product_id);
     return view('product.order',compact(['order','product']));
+}
+public function profile(){
+    $page = 'profile';
+    $merchant = MerchantProfile::where('user_id',Auth::user()->id)->first();
+    return view('dashboard.merchant.profile',compact(['page','merchant']));
+}
+public function updateMerchantProfile(Request $request){
+    $data = $request->validate([
+        'business_name'=>'required|max:255|string',
+        'business_email'=>'required|email|unique:merchant_profiles,business_email',
+        'business_phone'=>'required|max:11|string',
+        'business_address'=>'required|string',
+        'business_account_number'=>'required|max:10',
+        'bank'=>'required|string|max:255'
+       ]);
+    $merchant = MerchantProfile::where('user_id',Auth::user()->id)->get();
+    $merchant->update($data);
+    return back()->with('success','successfully updated profile');
 }
     
 }

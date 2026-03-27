@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->decimal('total_price', 10, 2);
             $table->string('order_id', 12)->unique();
+            $table->string('secret', 16)->unique();
             $table->string('payment_method');
             $table->enum('payment_status', ['pending', 'paid'])->default('pending');
             $table->timestamps();
