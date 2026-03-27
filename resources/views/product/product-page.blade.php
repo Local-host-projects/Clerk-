@@ -100,7 +100,19 @@
     @media (max-width: 850px) {
       .checkout-grid { grid-template-columns: 1fr; }
       .divider-v { display: none; }
-      .panel-right { border-top: 1px solid var(--border); }
+      .panel-left { padding: 40px 24px; }
+      .panel-right { border-top: 1px solid var(--border); padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .clerk-header { padding: 14px 20px; }
+      .panel-left { padding: 32px 20px; }
+      .panel-right { padding: 32px 20px; }
+      .panel-left h1 { font-size: 28px !important; }
+      .form-grid { grid-template-columns: 1fr; gap: 0; }
+      .modal-content { padding: 28px 20px; }
+      .btn-submit { padding: 18px 20px; font-size: 13px; }
+      .c-row.total { font-size: 15px; padding: 16px 18px; }
     }
   </style>
 </head>
@@ -131,13 +143,14 @@
 
     <section class="panel-right">
       <p class="eyebrow">ORDER_SUMMARY</p>
-      
+      @if ($product->type == 'physical')    
       <div class="qty-row">
         <div class="mono" style="padding: 0 18px; color: var(--text-muted); font-size: 10px;">QUANTITY</div>
         <button type="button" class="qty-btn" id="qty-minus">−</button>
         <div class="qty-num" id="qty-display">1</div>
         <button type="button" class="qty-btn" id="qty-plus">+</button>
       </div>
+      @endif
 
       <div class="c-block">
         <div class="c-row">
@@ -288,6 +301,13 @@
     };
 
     // Qty Logic
+    
+
+    // Theme Toggle
+    document.getElementById('theme-btn').addEventListener('click', () => {
+      const root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
     document.getElementById('qty-plus').addEventListener('click', () => {
       qty++;
       updateUI();
@@ -298,12 +318,6 @@
         qty--;
         updateUI();
       }
-    });
-
-    // Theme Toggle
-    document.getElementById('theme-btn').addEventListener('click', () => {
-      const root = document.documentElement;
-      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     });
   </script>
 

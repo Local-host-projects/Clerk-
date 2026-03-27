@@ -339,6 +339,7 @@
             }
         }
     </style>
+    @stack('styles')
 </head>
 <body>
 
@@ -347,19 +348,19 @@
         <nav class="navigation">
             <div class="logo">CLERK</div>
             <div class="nav-links">
-                <a href="#" class="nav-item active">
+                <a href="{{route('agent.panel')}}" class="nav-item @if($page == 'panel') active @endif">
                     <span class="nav-icon">▤</span>
                     <span>Panel</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item @if($page == 'logs') active @endif">
                     <span class="nav-icon">⇅</span>
                     <span>Logs</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item @if($page == 'tools') active @endif">
                     <span class="nav-icon">⚙</span>
                     <span>Tools</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item @if($page == 'account') active @endif">
                     <span class="nav-icon">👤</span>
                     <span>Account</span>
                 </a>
@@ -370,8 +371,8 @@
             <header class="header">
                 <div id="route-tag" class="section-tag">/terminal/agent</div>
                 <div class="role-switcher">
-                    <button class="role-btn" data-view="merchant" onclick="navigateTo(this)">Merchant</button>
-                    <button class="role-btn active" data-view="agent" onclick="navigateTo(this)">Agent</button>
+                    <button class="role-btn" data-view="merchant" >Merchant</button>
+                    <button class="role-btn active" data-view="agent" >Agent</button>
                 </div>
             </header>
 
@@ -381,23 +382,24 @@
     </div>
 
     <script>
-        function navigateTo(btn) {
-            const viewId = btn.getAttribute('data-view');
+        // function navigateTo(btn) {
+        //     const viewId = btn.getAttribute('data-view');
             
-            // 1. Update Buttons
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        //     // 1. Update Buttons
+        //     document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+        //     btn.classList.add('active');
 
-            // 2. Switch Page Views
-            document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
-            document.getElementById(viewId + '-view').classList.add('active');
+        //     // 2. Switch Page Views
+        //     document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
+        //     document.getElementById(viewId + '-view').classList.add('active');
 
-            // 3. Update Header Tag
-            document.getElementById('route-tag').innerText = `/terminal/${viewId}`;
+        //     // 3. Update Header Tag
+        //     document.getElementById('route-tag').innerText = `/terminal/${viewId}`;
             
-            // Scroll to top on view change
-            window.scrollTo(0, 0);
-        }
+        //     // Scroll to top on view change
+        //     window.scrollTo(0, 0);
+        // }
     </script>
+    @stack('scripts')
 </body>
 </html>

@@ -522,7 +522,7 @@ $agent = AgentProfile::where('user_id', auth()->id())->first();
       <h2>Agent Profile Found</h2>
       <p>You already have an agent profile (status: {{ strtoupper($agent->status) }}).<br>
          Visit your dashboard to start accepting orders.</p>
-      <a href="{{ route('agent.payment.register') }}" style="text-decoration:none;">
+      <a href="{{ route('agent.panel') }}" style="text-decoration:none;">
         <div style="padding:12px 20px; background:var(--accent); color:var(--btn-fg); font-family:'Space Mono'; font-weight:700; text-transform:uppercase; border-radius:4px; cursor:pointer;">
           Visit Dashboard
         </div>
@@ -575,6 +575,15 @@ $agent = AgentProfile::where('user_id', auth()->id())->first();
       @endif
         <input type="text" name="connected_bank_accounts" value="{{old('connected_bank_accounts')}}" placeholder="Bank Name — Account Number">
     </div>
+    <div class="input-group">
+        <label>Google map link (optional) </label>
+        @if ($errors->has('google_map_link'))
+    <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: var(--red); text-transform: uppercase; margin-top: 4px; display: block;">
+        {{ $errors->first('google_map_link') }}
+    </span>
+      @endif
+        <input type="text" name="google_map_link" value="{{old('google_map_link')}}" placeholder="Bank Name — Account Number">
+    </div>
 
     <button type="submit" class="btn-submit">Activate Agent Terminal</button>
   </form>
@@ -582,34 +591,70 @@ $agent = AgentProfile::where('user_id', auth()->id())->first();
 </div>
 
 <script>
+// function setRole(role){
+//   const toggle = document.getElementById('role-toggle');
+//   const merchantForm = document.getElementById('form-merchant');
+//   const agentForm = document.getElementById('form-agent');
+//   const btnM = document.getElementById('btn-merchant');
+//   const btnA = document.getElementById('btn-agent');
+//   const Agent = document.getElementById('agent-msg');
+//   const MerchantMsg = document.getElementById('merchant-msg');
+
+//   toggle.setAttribute('data-active', role);
+
+//   if(role === 'merchant'){
+//     Agent.classList.add('hidden');
+//     MerchantMsg.classList.remove('hidden');
+//     merchantForm?.classList.remove('hidden');
+//     agentForm?.classList.add('hidden');
+//     btnM.classList.add('active');
+//     btnA.classList.remove('active');
+//   } else {
+//     Agent.classList.remove('hidden');
+//     MerchantMsg.classList.add('hidden');
+//     merchantForm?.classList.add('hidden');
+//     agentForm?.classList.remove('hidden');
+//     btnM.classList.remove('active');
+//     btnA.classList.add('active');
+//   }
+// }
 function setRole(role){
   const toggle = document.getElementById('role-toggle');
+
   const merchantForm = document.getElementById('form-merchant');
   const agentForm = document.getElementById('form-agent');
+
+  const agentMsg = document.getElementById('agent-msg');
+  const merchantMsg = document.getElementById('merchant-msg');
+
   const btnM = document.getElementById('btn-merchant');
   const btnA = document.getElementById('btn-agent');
-  const AgentMsg = document.getElementById('agent-msg');
-  const MerchantMsg = document.getElementById('merchant-msg');
 
   toggle.setAttribute('data-active', role);
 
   if(role === 'merchant'){
-    AgentMsg.classList.add('hidden');
-    MerchantMsg.classList.remove('hidden');
-    merchantForm?.classList.remove('hidden');
-    agentForm?.classList.add('hidden');
+
+    if(agentMsg) agentMsg.classList.add('hidden');
+    if(merchantMsg) merchantMsg.classList.remove('hidden');
+
+    if(merchantForm) merchantForm.classList.remove('hidden');
+    if(agentForm) agentForm.classList.add('hidden');
+
     btnM.classList.add('active');
     btnA.classList.remove('active');
+
   } else {
-    AgentMsg.classList.remove('hidden');
-    MerchantMsg.classList.add('hidden');
-    merchantForm?.classList.add('hidden');
-    agentForm?.classList.remove('hidden');
+
+    if(agentMsg) agentMsg.classList.remove('hidden');
+    if(merchantMsg) merchantMsg.classList.add('hidden');
+
+    if(merchantForm) merchantForm.classList.add('hidden');
+    if(agentForm) agentForm.classList.remove('hidden');
+
     btnM.classList.remove('active');
     btnA.classList.add('active');
   }
 }
-
 window.onload = ()=>{
   const preferredRole = document.getElementById('role-toggle').dataset.active;
   setRole(preferredRole);

@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('full_name');
-            $table->string('phone')->unique()->nullable();
+            $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->string('connected_bank_accounts')->nullable();
+            $table->text('google_map_link')->nullable();
             $table->enum('status', ['incomplete', 'complete'])->default('incomplete');
             $table->timestamps();
         });

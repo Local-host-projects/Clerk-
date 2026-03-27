@@ -48,50 +48,7 @@ class MerchantProfileController extends Controller
         $products = Products::where('merchant',$merchant->id)->orderBy('created_at','desc')->get();
         return view('dashboard.merchant.products',compact(['page','products']));
     }
-//     public function createOrder(Request $request)
-// {
-//     $product = Products::findOrFail($request->product_id);
 
-//     if ($request->quantity < 1) {
-//         return back()->with('error', 'Invalid quantity.');
-//     }
-
-//     if ($product->type === 'physical' && $product->stock < $request->quantity) {
-//         return back()->with('error', 'Not enough stock.');
-//     }
-
-//     $merchant = $product->merchant;
-
-//     if (!$merchant) {
-//         return back()->with('error', 'Merchant profile missing.');
-//     }
-
-//     $total = $product->price * $request->quantity;
-
-//     do {
-//     $orderId = 'CK' . strtoupper(Str::random(6));
-// } while (Orders::where('order_id', $orderId)->exists());
-//     // dd([
-//     //     'product_id'  => $product->id,
-//     //     'merchant_id' => $merchant,
-//     //     'quantity'    => $request->quantity,
-//     //     'total_price' => $total,
-//     //     'order_id'    => $orderId,
-//     // ]);
-//     $order = Orders::create([
-//         'product_id'  => $product->id,
-//         'merchant_id' => $merchant,
-//         'quantity'    => $request->quantity,
-//         'total_price' => $total,
-//         'order_id'    => $orderId,
-//     ]);
-
-//     if ($product->type === 'physical') {
-//         $product->decrement('stock', $request->quantity);
-//     }
-
-//     return redirect()->route('product.order',['id'=>$order->id]);
-// }
 public function createOrder(Request $request)
 {
     // Validate the incoming delivery data
@@ -131,7 +88,7 @@ public function createOrder(Request $request)
     } while (Orders::where('order_id', $orderId)->exists());
     do {
         $secret = strtoupper(Str::random(16));
-    } while (Orders::where('secret', $orderId)->exists());
+    } while (Orders::where('secret', $secret)->exists());
 
     // Create the order record with delivery details
     $order = Orders::create([

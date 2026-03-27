@@ -26,9 +26,8 @@
                         <h2 class="section-title">Agent Actions</h2>
                     </div> 
                     <div class="action-strip">
-                        <a href="#" class="btn-action"><span>Payout</span> <span>→</span></a>
+                        <a href="{{route('agent.payment.orderid')}}" class="btn-action"><span>Payout</span> <span>→</span></a>
                         <a href="#" class="btn-action"><span>Add Float</span> <span>+</span></a>
-                        <a href="#" class="btn-action"><span>Issue Refund</span> <span>↺</span></a>
                     </div>
 
                     <div class="section-header">

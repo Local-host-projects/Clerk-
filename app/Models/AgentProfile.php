@@ -8,7 +8,7 @@ class AgentProfile extends Model
 {
      protected $fillable = [
         'user_id', 'full_name', 'phone',
-        'address', 'credit_cards', 'connected_bank_accounts',
+        'address', 'connected_bank_accounts', 'status', 'google_map_link'
     ];
 
     protected $casts = [

@@ -35,7 +35,8 @@ Route::middleware(['auth'])->prefix('merchant')->name('merchant.')->group(functi
 });
 Route::middleware(['auth'])->prefix('agent')->name('agent.')->group(function(){
     Route::get('/panel',[AgentProfileController::class,'panel'])->name('panel')->middleware('agent');
-    Route::get('/payment-register',[AgentProfileController::class,'paymentRegister'])->name('payment.register');
+    Route::get('/checkout-with-order-id',[AgentProfileController::class,'orderIdLookupPage'])->name('payment.orderid');
+    Route::get('/confirm-order-id',[AgentProfileController::class,'orderIdLookup'])->name('payment.confirm');
     Route::post('/create-agent-profile',[AgentProfileController::class,'store'])->name('profile.store');
 });
 Route::prefix('product')->name('product.')->group(function(){

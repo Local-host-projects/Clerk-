@@ -225,7 +225,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("d
 
     <div class="ffoot">
       <span class="ftxt">No account yet?</span>
-      <a href="clerk_signup.html" class="flink">Create account →</a>
+      <a href="{{route('auth.register')}}" class="flink">Create account →</a>
     </div>
   </main>
   </form>
